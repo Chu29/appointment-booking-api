@@ -8,6 +8,7 @@ import app from "../src/app.js";
 import debugLib from "debug";
 const debug = debugLib("appointment-booking-api:server");
 import { createServer } from "http";
+import { connectToDb } from "../src/config/database.js";
 
 /**
  * Get port from environment and store in Express.
@@ -23,12 +24,22 @@ app.set("port", port);
 const server = createServer(app);
 
 /**
- * Listen on provided port, on all network interfaces.
+ * Initialize database and start server
  */
 
-server.listen(port);
-server.on("error", onError);
-server.on("listening", onListening);
+connectToDb()
+  .then(() => {
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+    server.listen(port);
+    server.on("error", onError);
+    server.on("listening", onListening);
+  })
+  .catch((error) => {
+    console.error("Failed to initialize database:", error);
+    process.exit(1);
+  });
 
 /**
  * Normalize a port into a number, string, or false.
