@@ -11,13 +11,15 @@ if (process.env.NODE_ENV === "test") {
   logger.info("Loaded .env file for non-testing environment");
 }
 
-const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD } = process.env;
+const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD } = process.env; // Get DB config from env variables
 
+// Here, I make sure all required DB env variables are set
 if (!DB_HOST || !DB_PORT || !DB_NAME || !DB_USER || !DB_PASSWORD) {
   logger.error("Database configuration variables are missing");
   process.exit(1);
 }
 
+// Create a new pool instance
 const pool = new Pool({
   host: DB_HOST,
   port: parseInt(DB_PORT, 10),
@@ -35,12 +37,12 @@ pool.on("connect", () => {
 });
 
 // Listen for errors emitted on the pool
-pool.on("error", (err, client) => {
+pool.on("error", (err) => {
   logger.error("Unexpected error on idle database client", err);
   process.exit(-1);
 });
 
-// Initialize the DB
+// Initialize the DB schema
 const initDbSchema = async () => {
   const client = await pool.connect();
 
@@ -149,4 +151,21 @@ const connectToDb = async () => {
   }
 };
 
-export { pool, initDbSchema, connectToDb };
+const query = async (text, params) => {
+  const start = Date.now();
+  try {
+    const response = await pool.query(text, params);
+    const duration = Date.now() - start;
+    logger.info(
+      `Executed query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, duration: ${duration}ms, rows: ${response.rowCount}}`,
+    );
+    return response;
+  } catch (error) {
+    logger.error(
+      `Error executing query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, error: ${error.message}}`,
+    );
+    throw error;
+  }
+};
+
+export { pool, initDbSchema, connectToDb, query };
