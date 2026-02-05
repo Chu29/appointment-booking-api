@@ -75,3 +75,45 @@ export const createUser = async ({ name, email, password, role }) => {
     throw error;
   }
 };
+
+/**
+ * Authenticate user credentials
+ * @param {string} email - User email
+ * @param {string} password - Plain text password
+ * @returns {Promise<Object>} - Authenticated user object
+ */
+export const authenticateUser = async (email, password) => {
+  try {
+    const query =
+      "SELECT id, name, email, password_hash, role FROM users WHERE email = $1";
+    const result = await pool.query(query, [email]);
+
+    if (result.rows.length === 0) {
+      logger.warn(`Authentication failed: No user found with email - ${email}`);
+      const error = new Error("Invalid email or password");
+      error.status = 401;
+      throw error;
+    }
+
+    const user = result.rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordMatch) {
+      logger.warn(
+        `Authentication failed: Incorrect password for email - ${email}`,
+      );
+      const error = new Error("Invalid email or password");
+      error.status = 401;
+      throw error;
+    }
+
+    logger.info(
+      `User authenticated successfully: ID=${user.id}, Email=${user.email}`,
+    );
+    delete user.password_hash; // Remove password hash before returning user object
+    return user;
+  } catch (error) {
+    logger.error("Error authenticating user", { email, error: error.message });
+    throw error;
+  }
+};
