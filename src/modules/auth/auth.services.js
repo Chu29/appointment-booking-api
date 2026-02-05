@@ -1,5 +1,5 @@
-import { pool } from "../../../config/database.js";
-import logger from "../../../utils/logger.js";
+import { pool } from "../../config/database.js";
+import logger from "../../utils/logger.js";
 import bcrypt from "bcryptjs";
 
 const HASH_SALT = 10;

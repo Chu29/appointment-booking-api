@@ -1,5 +1,5 @@
 import Joi from "joi";
-import logger from "../../../utils/logger.js";
+import logger from "../../utils/logger.js";
 
 const registrationSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100).required().messages({

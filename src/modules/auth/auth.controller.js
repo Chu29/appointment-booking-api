@@ -1,5 +1,5 @@
-import { createUser } from "./registration.service.js";
-import logger from "../../../utils/logger.js";
+import { createUser } from "./auth.services.js";
+import logger from "../../utils/logger.js";
 
 /**
  * Handle user registration request
