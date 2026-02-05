@@ -55,3 +55,38 @@ export const validateRegistration = (req, res, next) => {
 
   next();
 };
+
+const loginSchema = Joi.object({
+  email: Joi.string().trim().email().required().messages({
+    "string.empty": "Email is required",
+    "string.email": "Must be a valid email address",
+    "any.required": "Email is required",
+  }),
+
+  password: Joi.string().required().messages({
+    "string.empty": "Password is required",
+    "any.required": "Password is required",
+  }),
+});
+
+export const validateLogin = (req, res, next) => {
+  const { error } = loginSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    const errors = error.details.map((err) => ({
+      field: err.path[0],
+      message: err.message,
+    }));
+
+    logger.warn("Login validation failed", { errors });
+
+    return res.status(400).json({
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  next();
+};
