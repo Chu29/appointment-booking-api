@@ -1,0 +1,1 @@
+// TODO: Write tests for auth module covering registration and login functionalities, including validation and error handling.
