@@ -4,7 +4,7 @@ import express, { json, urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 
-import registerRouter from "../src/modules/auth/auth_registration/registration.route.js";
+import registerRouter from "../src/modules/auth/auth.routes.js";
 
 const app = express();
 
