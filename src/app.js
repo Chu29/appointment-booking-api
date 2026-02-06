@@ -4,7 +4,8 @@ import express, { json, urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 
-import registerRouter from "../src/modules/auth/auth.routes.js";
+import authRouter from "../src/modules/auth/auth.routes.js";
+import userRouter from "../src/modules/users/user.routes.js";
 
 const app = express();
 
@@ -13,7 +14,8 @@ app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/auth", registerRouter);
+app.use("/auth", authRouter);
+app.use("/users", userRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
