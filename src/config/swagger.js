@@ -23,7 +23,7 @@ const options = {
         description: "Development server",
       },
       {
-        url: "https://api.appointmentbooking.com",
+        url: "https://appointment-booking-api-xxb5.onrender.com",
         description: "Production server",
       },
     ],
