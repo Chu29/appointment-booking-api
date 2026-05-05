@@ -156,6 +156,7 @@ router.get(
 router.get(
   "/provider/:providerId",
   authenticateToken,
+  authorizeRoles("provider"),
   validateParams(providerIdParamSchema),
   validateQuery(appointmentStatusQuerySchema),
   getProviderAppointmentsHandler,
