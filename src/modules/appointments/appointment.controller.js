@@ -5,6 +5,7 @@ import {
   notifyAppointmentCompleted,
 } from "../../services/notification.service.js";
 import logger from "../../utils/logger.js";
+import { pool } from "../../config/database.js";
 
 /**
  * Book an appointment
@@ -109,7 +110,6 @@ export const getMyAppointmentsHandler = async (req, res) => {
       );
     } else if (userRole === "provider") {
       // Get provider_id from service_providers table
-      const pool = (await import("../../config/database.js")).default;
       const providerResult = await pool.query(
         "SELECT id FROM service_providers WHERE user_id = $1",
         [userId],
@@ -155,8 +155,32 @@ export const getMyAppointmentsHandler = async (req, res) => {
  */
 export const getProviderAppointmentsHandler = async (req, res) => {
   try {
+    const userId = req.user.id;
     const { providerId } = req.params;
     const { status } = req.query;
+
+    // Get the providerId for authenticated user
+    const providerResult = await pool.query(
+      "SELECT id FROM service_providers WHERE user_id = $1",
+      [userId],
+    );
+
+    if (providerResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider profile not found",
+      });
+    }
+
+    const authProviderUserId = providerResult.rows[0].id;
+
+    // Verify provider is requesting their own appointments
+    if(authProviderUserId !== parseInt(providerId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view these appointments",
+      });
+    }
 
     const appointments = await appointmentService.getProviderAppointments(
       parseInt(providerId),
