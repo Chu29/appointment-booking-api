@@ -120,20 +120,24 @@ This will install all required packages including:
 Create a `.env` file in the root directory with the following configuration:
 
 ```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
 # Database Configuration
+# You can provide a single connection string via DATABASE_URL, or provide the DB_* variables.
+# Example DATABASE_URL: postgres://user:password@localhost:5432/appointment_system
+DATABASE_URL=
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=appointment_system
 DB_USER=postgres
 DB_PASSWORD=your_secure_password
+DB_SSL=false
 
 # JWT Configuration
 JWT_SECRET=your_super_secret_jwt_key_here_change_in_production
 JWT_EXPIRES_IN=24h
-
-# Server Configuration
-PORT=8080
-NODE_ENV=development
 
 # Password Hashing
 HASH_SALT=10
@@ -143,6 +147,8 @@ HASH_SALT=10
 
 | Variable         | Description                               | Default            | Required |
 | ---------------- | ----------------------------------------- | ------------------ | -------- |
+| `PORT`           | Server port                               | 3000               | No       |
+| `NODE_ENV`       | Environment (development/production/test) | development        | No       |
 | `DB_HOST`        | PostgreSQL host address                   | localhost          | Yes      |
 | `DB_PORT`        | PostgreSQL port                           | 5432               | Yes      |
 | `DB_NAME`        | Database name                             | appointment_system | Yes      |
@@ -150,9 +156,8 @@ HASH_SALT=10
 | `DB_PASSWORD`    | Database password                         | -                  | Yes      |
 | `JWT_SECRET`     | Secret key for JWT signing                | -                  | Yes      |
 | `JWT_EXPIRES_IN` | JWT token expiration time                 | 24h                | Yes      |
-| `PORT`           | Server port                               | 8080               | No       |
-| `NODE_ENV`       | Environment (development/production/test) | development        | No       |
-| `HASH_SALT`      | bcrypt salt rounds                        | 10                 | No       |
+| `DATABASE_URL`   | Postgres connection string (optional)     | -                  | No\*     |
+| `DB_SSL`         | Enable SSL for DB in production (true)    | false              | No       |
 
 **⚠️ Security Note:** Never commit the `.env` file to version control. Always use strong, unique values for `JWT_SECRET` and `DB_PASSWORD` in production.
 
@@ -226,7 +231,7 @@ npm start
 npm run dev
 ```
 
-The server will start on `http://localhost:8080` (or the port specified in `.env`)
+The server will start on `http://localhost:3000` (or the port specified in `.env`)
 
 ### Production Mode
 
@@ -245,12 +250,12 @@ The WebSocket server starts automatically with the application. No additional co
 You should see output similar to:
 
 ```
-Server listening on port 8080
+Server listening on port 3000
 Database connected successfully
 WebSocket server initialized
 ```
 
-Visit `http://localhost:8080/api-docs` to access the Swagger documentation.
+Visit `http://localhost:3000/api-docs` to access the Swagger documentation.
 
 ## 📚 API Documentation
 
@@ -259,7 +264,7 @@ Visit `http://localhost:8080/api-docs` to access the Swagger documentation.
 Access the interactive API documentation at:
 
 ```
-http://localhost:8080/api-docs
+http://localhost:3000/api-docs
 ```
 
 Features:
