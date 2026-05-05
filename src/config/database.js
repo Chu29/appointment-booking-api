@@ -21,13 +21,12 @@ if (!DB_HOST || !DB_PORT || !DB_NAME || !DB_USER || !DB_PASSWORD) {
 
 // Create a new pool instance
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // host: DB_HOST,
-  // port: parseInt(DB_PORT, 10),
-  // database: DB_NAME,
-  // user: DB_USER,
-  // password: DB_PASSWORD,
-  // connectionTimeoutMillis: 5000,
+  host: DB_HOST,
+  port: parseInt(DB_PORT, 10),
+  database: DB_NAME,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  connectionTimeoutMillis: 5000,
   ssl: {
     rejectUnauthorized: false,
   },
