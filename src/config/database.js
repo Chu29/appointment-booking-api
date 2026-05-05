@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import logger from "../utils/logger.js";
 import dotenv from "dotenv";
 
-// check if NODE_ENV is test, then load .env.test file
+// Load env (use .env.test when running tests)
 if (process.env.NODE_ENV === "test") {
   dotenv.config({ path: ".env.test", override: true });
   logger.info("Loaded .env.test file for testing environment");
@@ -11,41 +11,65 @@ if (process.env.NODE_ENV === "test") {
   logger.info("Loaded .env file for non-testing environment");
 }
 
-const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD } = process.env; // Get DB config from env variables
+// Support either a DATABASE_URL connection string or individual DB_* vars
+const {
+  DATABASE_URL,
+  DB_HOST,
+  DB_PORT,
+  DB_NAME,
+  DB_USER,
+  DB_PASSWORD,
+  DB_SSL, // optional override ("true"/"false")
+} = process.env;
 
-// Here, I make sure all required DB env variables are set
-if (!DB_HOST || !DB_PORT || !DB_NAME || !DB_USER || !DB_PASSWORD) {
-  logger.error("Database configuration variables are missing");
-  process.exit(1);
+const isProduction = process.env.NODE_ENV === "production";
+
+// Decide SSL usage: enabled in production by default, overridable via DB_SSL='false'
+const useSSL = isProduction && DB_SSL !== "false";
+
+let poolConfig = {
+  connectionTimeoutMillis: 5000,
+};
+
+if (DATABASE_URL) {
+  poolConfig.connectionString = DATABASE_URL;
+  poolConfig.ssl = useSSL ? { rejectUnauthorized: true } : false;
+  logger.info("Using DATABASE_URL for Postgres connection");
+} else {
+  // If DATABASE_URL not provided, require DB_* vars
+  if (!DB_HOST || !DB_PORT || !DB_NAME || !DB_USER) {
+    logger.error(
+      "Missing database configuration. Provide DATABASE_URL or DB_HOST, DB_PORT, DB_NAME, DB_USER (and DB_PASSWORD if required).",
+    );
+    process.exit(1);
+  }
+
+  poolConfig = {
+    ...poolConfig,
+    host: DB_HOST,
+    port: parseInt(DB_PORT, 10),
+    database: DB_NAME,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    ssl: useSSL ? { rejectUnauthorized: true } : false,
+  };
+
+  logger.info(
+    `Using DB_* variables for Postgres connection: ${DB_HOST}:${DB_PORT}/${DB_NAME}`,
+  );
 }
 
-// Create a new pool instance
-const pool = new Pool({
-  host: DB_HOST,
-  port: parseInt(DB_PORT, 10),
-  database: DB_NAME,
-  user: DB_USER,
-  password: DB_PASSWORD,
-  connectionTimeoutMillis: 5000,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+const pool = new Pool(poolConfig);
 
-logger.info(`Database pool created for ${DB_NAME} at ${DB_HOST}:${DB_PORT}`);
-
-// Listen for connect events emitted on the pool
 pool.on("connect", () => {
   logger.info("Database client connected");
 });
 
-// Listen for errors emitted on the pool
 pool.on("error", (err) => {
   logger.error("Unexpected error on idle database client", err);
   process.exit(-1);
 });
 
-// Initialize the DB schema
 const initDbSchema = async () => {
   const client = await pool.connect();
 
