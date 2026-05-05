@@ -1,75 +1,42 @@
 import winston from "winston";
-import path, { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const { combine, timestamp, errors, printf, colorize, align } = winston.format;
 
-const logDir = path.join(__dirname, "../logs");
-
-const {
-  format: { combine, timestamp, colorize, prettyPrint, errors, align },
-} = winston;
+const humanFormat = printf(({ timestamp, level, message, stack }) =>
+  stack
+    ? `${timestamp} ${level}: ${message} - ${stack}`
+    : `${timestamp} ${level}: ${message}`,
+);
 
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === "development" ? "info" : "debug",
-  format: combine(
-    timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    errors({ stack: true }),
-    prettyPrint(),
-  ),
+  level: process.env.NODE_ENV === "development" ? "debug" : "info",
+  format:
+    process.env.NODE_ENV === "production"
+      ? combine(
+          timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+          errors({ stack: true }),
+          humanFormat,
+        )
+      : combine(
+          colorize(),
+          timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+          align(),
+          errors({ stack: true }),
+          humanFormat,
+        ),
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: path.join(logDir, "app.log"),
-      level: "info",
-      maxsize: 5242880,
-      maxFiles: 5,
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, "error.log"),
-      level: "error",
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
+    new winston.transports.Console({
+      stderrLevels: ["error"],
     }),
   ],
-  exceptionHandlers: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: path.join(logDir, "exception.log"),
-      level: "error",
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: path.join(logDir, "rejection.log"),
-      level: "error",
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-  ],
+  exceptionHandlers: [new winston.transports.Console()],
+  rejectionHandlers: [new winston.transports.Console()],
   exitOnError: false,
 });
 
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      level: "debug",
-      format: combine(
-        colorize(),
-        timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        align(),
-      ),
-    }),
-  );
-}
-
 logger.stream = {
   write: (message) => {
-    logger.info(message.substring(0, message.lastIndexOf("\n")));
+    logger.info(message.replace(/\n$/, ""));
   },
 };
 
