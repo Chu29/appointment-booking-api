@@ -8,18 +8,10 @@ const options = {
       version: "1.0.0",
       description:
         "A comprehensive REST API for managing appointment bookings between clients and service providers with real-time notifications via WebSocket.",
-      contact: {
-        name: "API Support",
-        email: "support@appointmentbooking.com",
-      },
-      license: {
-        name: "MIT",
-        url: "https://opensource.org/licenses/MIT",
-      },
     },
     servers: [
       {
-        url: "http://localhost:8080",
+        url: "http://localhost:5000",
         description: "Development server",
       },
       {
@@ -278,10 +270,7 @@ const options = {
       },
     ],
   },
-  apis: [
-    "./src/modules/*/*.routes.js",
-    "./src/config/swagger-annotations.js"
-  ], // Path to the API routes
+  apis: ["./src/modules/*/*.routes.js", "./src/config/swagger-annotations.js"], // Path to the API routes
 };
 
 const swaggerSpec = swaggerJsdoc(options);

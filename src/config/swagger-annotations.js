@@ -221,7 +221,3 @@
  *             type: object
  *           description: Array of items
  */
-
-// Note: All route-specific documentation has been moved to inline JSDoc comments
-// in the respective route files for better maintainability and accuracy.
-// This file now only contains reusable schema definitions.
