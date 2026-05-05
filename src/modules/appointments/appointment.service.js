@@ -331,3 +331,46 @@ export const completeAppointment = async (appointmentId, providerUserId) => {
     client.release();
   }
 };
+
+/**
+ * Get public summary of provider appointments (no client PII)
+ * For public-facing endpoints or unauthenticated visibility
+ * @param {number} providerId - Service provider ID
+ * @param {string} status - Filter by status (optional)
+ * @returns {Array} List of appointments without client names/emails
+ */
+export const getProviderAppointmentsSummary = async (
+  providerId,
+  status = null,
+) => {
+  let query = `
+    SELECT 
+      a.id,
+      a.provider_id,
+      a.time_slot_id,
+      a.status,
+      ts.slot_date,
+      ts.start_time,
+      ts.end_time,
+      ts.duration
+    FROM appointments a
+    JOIN time_slots ts ON a.time_slot_id = ts.id
+    WHERE a.provider_id = $1
+  `;
+
+  const params = [providerId];
+
+  if (status) {
+    query += " AND a.status = $2";
+    params.push(status);
+  }
+
+  query += " ORDER BY ts.slot_date DESC, ts.start_time DESC";
+
+  const result = await pool.query(query, params);
+
+  logger.info(
+    `Retrieved ${result.rows.length} appointment summaries for provider ${providerId}`,
+  );
+  return result.rows;
+};
