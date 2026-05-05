@@ -1,1 +1,1 @@
-export { authenticateToken, authorizeRoles } from "./auth.middleware.js";
+export { authenticateToken, authorizeRoles } from './auth.middleware.js'

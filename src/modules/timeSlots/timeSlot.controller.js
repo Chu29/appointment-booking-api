@@ -4,8 +4,8 @@ import {
   getAvailableTimeSlots,
   updateTimeSlot,
   deleteTimeSlot,
-} from "./timeSlot.service.js";
-import logger from "../../utils/logger.js";
+} from './timeSlot.service.js'
+import logger from '../../utils/logger.js'
 
 /**
  * Create a new time slot (provider only)
@@ -13,28 +13,28 @@ import logger from "../../utils/logger.js";
  */
 export const createSlot = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const { slot_date, start_time, end_time, duration } = req.body;
+    const userId = req.user.id
+    const { slot_date, start_time, end_time, duration } = req.body
 
     const timeSlot = await createTimeSlot(userId, {
       slot_date,
       start_time,
       end_time,
       duration,
-    });
+    })
 
     res.status(201).json({
-      message: "Time slot created successfully",
+      message: 'Time slot created successfully',
       timeSlot,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Create time slot error", error);
-    next(error);
+    logger.error('Create time slot error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Get all time slots for current provider
@@ -42,22 +42,22 @@ export const createSlot = async (req, res, next) => {
  */
 export const getMySlots = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const timeSlots = await getProviderTimeSlots(userId);
+    const userId = req.user.id
+    const timeSlots = await getProviderTimeSlots(userId)
 
     res.status(200).json({
-      message: "Time slots retrieved successfully",
+      message: 'Time slots retrieved successfully',
       count: timeSlots.length,
       timeSlots,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Get my slots error", error);
-    next(error);
+    logger.error('Get my slots error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Get available time slots for a provider (client view)
@@ -65,28 +65,28 @@ export const getMySlots = async (req, res, next) => {
  */
 export const getAvailableSlots = async (req, res, next) => {
   try {
-    const { providerId } = req.params;
-    const { startDate, endDate } = req.query;
+    const { providerId } = req.params
+    const { startDate, endDate } = req.query
 
     const timeSlots = await getAvailableTimeSlots(
       providerId,
       startDate,
       endDate,
-    );
+    )
 
     res.status(200).json({
-      message: "Available time slots retrieved successfully",
+      message: 'Available time slots retrieved successfully',
       count: timeSlots.length,
       timeSlots,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Get available slots error", error);
-    next(error);
+    logger.error('Get available slots error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Update a time slot (provider only)
@@ -94,29 +94,29 @@ export const getAvailableSlots = async (req, res, next) => {
  */
 export const updateSlot = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const { slotId } = req.params;
-    const { slot_date, start_time, end_time, duration } = req.body;
+    const userId = req.user.id
+    const { slotId } = req.params
+    const { slot_date, start_time, end_time, duration } = req.body
 
     const updatedSlot = await updateTimeSlot(slotId, userId, {
       slot_date,
       start_time,
       end_time,
       duration,
-    });
+    })
 
     res.status(200).json({
-      message: "Time slot updated successfully",
+      message: 'Time slot updated successfully',
       timeSlot: updatedSlot,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Update time slot error", error);
-    next(error);
+    logger.error('Update time slot error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Delete a time slot (provider only)
@@ -124,19 +124,19 @@ export const updateSlot = async (req, res, next) => {
  */
 export const deleteSlot = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const { slotId } = req.params;
+    const userId = req.user.id
+    const { slotId } = req.params
 
-    await deleteTimeSlot(slotId, userId);
+    await deleteTimeSlot(slotId, userId)
 
     res.status(200).json({
-      message: "Time slot deleted successfully",
-    });
+      message: 'Time slot deleted successfully',
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Delete time slot error", error);
-    next(error);
+    logger.error('Delete time slot error', error)
+    next(error)
   }
-};
+}

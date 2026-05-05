@@ -1,16 +1,16 @@
-import { Router } from "express";
+import { Router } from 'express'
 import {
   getMyProfile,
   getProviders,
   updateProfile,
-} from "./provider.controller.js";
-import { validateUpdateProvider } from "./provider.validation.js";
+} from './provider.controller.js'
+import { validateUpdateProvider } from './provider.validation.js'
 import {
   authenticateToken,
   authorizeRoles,
-} from "../../middleware/auth.middleware.js";
+} from '../../middleware/auth.middleware.js'
 
-const router = Router();
+const router = Router()
 
 /**
  * @swagger
@@ -105,7 +105,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", authenticateToken, getProviders);
+router.get('/', authenticateToken, getProviders)
 
 /**
  * @swagger
@@ -205,11 +205,11 @@ router.get("/", authenticateToken, getProviders);
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-  "/profile",
+  '/profile',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   getMyProfile,
-);
+)
 
 /**
  * @swagger
@@ -346,11 +346,11 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.put(
-  "/profile",
+  '/profile',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   validateUpdateProvider,
   updateProfile,
-);
+)
 
-export default router;
+export default router

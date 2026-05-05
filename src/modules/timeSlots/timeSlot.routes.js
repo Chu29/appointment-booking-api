@@ -1,21 +1,21 @@
-import { Router } from "express";
+import { Router } from 'express'
 import {
   createSlot,
   getMySlots,
   getAvailableSlots,
   updateSlot,
   deleteSlot,
-} from "./timeSlot.controller.js";
+} from './timeSlot.controller.js'
 import {
   validateCreateTimeSlot,
   validateUpdateTimeSlot,
-} from "./timeSlot.validation.js";
+} from './timeSlot.validation.js'
 import {
   authenticateToken,
   authorizeRoles,
-} from "../../middleware/auth.middleware.js";
+} from '../../middleware/auth.middleware.js'
 
-const router = Router();
+const router = Router()
 
 /**
  * @swagger
@@ -174,12 +174,12 @@ const router = Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  "/",
+  '/',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   validateCreateTimeSlot,
   createSlot,
-);
+)
 
 /**
  * @swagger
@@ -267,11 +267,11 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-  "/my-slots",
+  '/my-slots',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   getMySlots,
-);
+)
 
 /**
  * @swagger
@@ -432,7 +432,7 @@ router.get(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/available/:providerId", authenticateToken, getAvailableSlots);
+router.get('/available/:providerId', authenticateToken, getAvailableSlots)
 
 /**
  * @swagger
@@ -605,12 +605,12 @@ router.get("/available/:providerId", authenticateToken, getAvailableSlots);
  *               $ref: '#/components/schemas/Error'
  */
 router.put(
-  "/:slotId",
+  '/:slotId',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   validateUpdateTimeSlot,
   updateSlot,
-);
+)
 
 /**
  * @swagger
@@ -697,10 +697,10 @@ router.put(
  *               $ref: '#/components/schemas/Error'
  */
 router.delete(
-  "/:slotId",
+  '/:slotId',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   deleteSlot,
-);
+)
 
-export default router;
+export default router

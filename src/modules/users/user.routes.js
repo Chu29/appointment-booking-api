@@ -1,20 +1,20 @@
-import { Router } from "express";
+import { Router } from 'express'
 import {
   getProfile,
   updateProfile,
   changePassword,
   deleteAccount,
-} from "./user.controller.js";
+} from './user.controller.js'
 import {
   validateUpdateProfile,
   validateChangePassword,
-} from "./user.validation.js";
-import { authenticateToken } from "../../middleware/auth.middleware.js";
+} from './user.validation.js'
+import { authenticateToken } from '../../middleware/auth.middleware.js'
 
-const router = Router();
+const router = Router()
 
 // All user routes require authentication
-router.use(authenticateToken);
+router.use(authenticateToken)
 
 /**
  * @swagger
@@ -80,7 +80,7 @@ router.use(authenticateToken);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/profile", getProfile);
+router.get('/profile', getProfile)
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get("/profile", getProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put("/profile", validateUpdateProfile, updateProfile);
+router.put('/profile', validateUpdateProfile, updateProfile)
 
 /**
  * @swagger
@@ -273,7 +273,7 @@ router.put("/profile", validateUpdateProfile, updateProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put("/password", validateChangePassword, changePassword);
+router.put('/password', validateChangePassword, changePassword)
 
 /**
  * @swagger
@@ -324,6 +324,6 @@ router.put("/password", validateChangePassword, changePassword);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete("/profile", deleteAccount);
+router.delete('/profile', deleteAccount)
 
-export default router;
+export default router

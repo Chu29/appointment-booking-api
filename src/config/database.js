@@ -1,14 +1,14 @@
-import { Pool } from "pg";
-import logger from "../utils/logger.js";
-import dotenv from "dotenv";
+import { Pool } from 'pg'
+import logger from '../utils/logger.js'
+import dotenv from 'dotenv'
 
 // Load env (use .env.test when running tests)
-if (process.env.NODE_ENV === "test") {
-  dotenv.config({ path: ".env.test", override: true });
-  logger.info("Loaded .env.test file for testing environment");
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test', override: true })
+  logger.info('Loaded .env.test file for testing environment')
 } else {
-  dotenv.config();
-  logger.info("Loaded .env file for non-testing environment");
+  dotenv.config()
+  logger.info('Loaded .env file for non-testing environment')
 }
 
 // Support either a DATABASE_URL connection string or individual DB_* vars
@@ -20,28 +20,28 @@ const {
   DB_USER,
   DB_PASSWORD,
   DB_SSL, // optional override ("true"/"false")
-} = process.env;
+} = process.env
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === 'production'
 
 // Decide SSL usage: enabled in production by default, overridable via DB_SSL='false'
-const useSSL = isProduction && DB_SSL !== "false";
+const useSSL = isProduction && DB_SSL !== 'false'
 
 let poolConfig = {
   connectionTimeoutMillis: 5000,
-};
+}
 
 if (DATABASE_URL) {
-  poolConfig.connectionString = DATABASE_URL;
-  poolConfig.ssl = useSSL ? { rejectUnauthorized: true } : false;
-  logger.info("Using DATABASE_URL for Postgres connection");
+  poolConfig.connectionString = DATABASE_URL
+  poolConfig.ssl = useSSL ? { rejectUnauthorized: true } : false
+  logger.info('Using DATABASE_URL for Postgres connection')
 } else {
   // If DATABASE_URL not provided, require DB_* vars
   if (!DB_HOST || !DB_PORT || !DB_NAME || !DB_USER) {
     logger.error(
-      "Missing database configuration. Provide DATABASE_URL or DB_HOST, DB_PORT, DB_NAME, DB_USER (and DB_PASSWORD if required).",
-    );
-    process.exit(1);
+      'Missing database configuration. Provide DATABASE_URL or DB_HOST, DB_PORT, DB_NAME, DB_USER (and DB_PASSWORD if required).',
+    )
+    process.exit(1)
   }
 
   poolConfig = {
@@ -52,30 +52,30 @@ if (DATABASE_URL) {
     user: DB_USER,
     password: DB_PASSWORD,
     ssl: useSSL ? { rejectUnauthorized: true } : false,
-  };
+  }
 
   logger.info(
     `Using DB_* variables for Postgres connection: ${DB_HOST}:${DB_PORT}/${DB_NAME}`,
-  );
+  )
 }
 
-const pool = new Pool(poolConfig);
+const pool = new Pool(poolConfig)
 
-pool.on("connect", () => {
-  logger.info("Database client connected");
-});
+pool.on('connect', () => {
+  logger.info('Database client connected')
+})
 
-pool.on("error", (err) => {
-  logger.error("Unexpected error on idle database client", err);
-  process.exit(-1);
-});
+pool.on('error', (err) => {
+  logger.error('Unexpected error on idle database client', err)
+  process.exit(-1)
+})
 
 const initDbSchema = async () => {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    logger.info("Initializing database schema...");
-    await client.query("CREATE EXTENSION IF NOT EXISTS pgcrypto;");
+    logger.info('Initializing database schema...')
+    await client.query('CREATE EXTENSION IF NOT EXISTS pgcrypto;')
 
     // Create users table (both clients and providers)
     await client.query(`
@@ -88,9 +88,9 @@ const initDbSchema = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `);
+    `)
 
-    logger.info("Users table has been successfully created.");
+    logger.info('Users table has been successfully created.')
 
     // Service Providers table (extended info for providers)
     await client.query(`
@@ -102,9 +102,9 @@ const initDbSchema = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
-    `);
+    `)
 
-    logger.info("Service providers table has been successfully created.");
+    logger.info('Service providers table has been successfully created.')
 
     // Time Slots table
     await client.query(`
@@ -123,9 +123,9 @@ const initDbSchema = async () => {
       -- Prevent overlapping slots for same provider
       CONSTRAINT unique_provider_time UNIQUE (provider_id, slot_date, start_time)
       );
-   `);
+   `)
 
-    logger.info("Time slots table has been successfully created.");
+    logger.info('Time slots table has been successfully created.')
 
     // Appointments table
     await client.query(`
@@ -142,9 +142,9 @@ const initDbSchema = async () => {
       FOREIGN KEY (provider_id) REFERENCES service_providers(id) ON DELETE CASCADE,
       FOREIGN KEY (time_slot_id) REFERENCES time_slots(id) ON DELETE CASCADE
       );
-    `);
+    `)
 
-    logger.info("Appointments table has been successfully created.");
+    logger.info('Appointments table has been successfully created.')
 
     // Indexes for performance
     await client.query(`
@@ -156,43 +156,43 @@ const initDbSchema = async () => {
       CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments(client_id);
       CREATE INDEX IF NOT EXISTS idx_appointments_provider ON appointments(provider_id);
       CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
-    `);
+    `)
 
-    logger.info("Database schema initialization completed successfully.");
+    logger.info('Database schema initialization completed successfully.')
   } catch (error) {
-    logger.error("Error initializing database schema", error);
+    logger.error('Error initializing database schema', error)
   } finally {
-    client.release();
+    client.release()
   }
-};
+}
 
 const connectToDb = async () => {
   try {
-    const client = await pool.connect();
-    logger.info("Successfully connected to the database");
-    client.release();
-    await initDbSchema();
+    const client = await pool.connect()
+    logger.info('Successfully connected to the database')
+    client.release()
+    await initDbSchema()
   } catch (error) {
-    logger.error("Error connecting to the database", error);
-    process.exit(1);
+    logger.error('Error connecting to the database', error)
+    process.exit(1)
   }
-};
+}
 
 const query = async (text, params) => {
-  const start = Date.now();
+  const start = Date.now()
   try {
-    const response = await pool.query(text, params);
-    const duration = Date.now() - start;
+    const response = await pool.query(text, params)
+    const duration = Date.now() - start
     logger.info(
       `Executed query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, duration: ${duration}ms, rows: ${response.rowCount}}`,
-    );
-    return response;
+    )
+    return response
   } catch (error) {
     logger.error(
       `Error executing query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, error: ${error.message}}`,
-    );
-    throw error;
+    )
+    throw error
   }
-};
+}
 
-export { pool, initDbSchema, connectToDb, query };
+export { pool, initDbSchema, connectToDb, query }

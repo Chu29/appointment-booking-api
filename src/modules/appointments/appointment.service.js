@@ -1,5 +1,5 @@
-import { pool } from "../../config/database.js";
-import logger from "../../utils/logger.js";
+import { pool } from '../../config/database.js'
+import logger from '../../utils/logger.js'
 
 /**
  * Book a time slot for a client
@@ -8,10 +8,10 @@ import logger from "../../utils/logger.js";
  * @returns {Object} Created appointment data with provider and slot info
  */
 export const bookAppointment = async (clientId, timeSlotId) => {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    await client.query("BEGIN");
+    await client.query('BEGIN')
 
     // Check if time slot exists and is available
     const slotResult = await client.query(
@@ -20,26 +20,26 @@ export const bookAppointment = async (clientId, timeSlotId) => {
        JOIN service_providers sp ON ts.provider_id = sp.id
        WHERE ts.id = $1`,
       [timeSlotId],
-    );
+    )
 
     if (slotResult.rows.length === 0) {
-      throw new Error("Time slot not found");
+      throw new Error('Time slot not found')
     }
 
-    const slot = slotResult.rows[0];
+    const slot = slotResult.rows[0]
 
     if (slot.is_booked) {
-      throw new Error("Time slot is already booked");
+      throw new Error('Time slot is already booked')
     }
 
     // Check if appointment already exists for this slot
     const existingAppointment = await client.query(
-      "SELECT id FROM appointments WHERE time_slot_id = $1",
+      'SELECT id FROM appointments WHERE time_slot_id = $1',
       [timeSlotId],
-    );
+    )
 
     if (existingAppointment.rows.length > 0) {
-      throw new Error("Appointment already exists for this time slot");
+      throw new Error('Appointment already exists for this time slot')
     }
 
     // Create appointment
@@ -48,28 +48,28 @@ export const bookAppointment = async (clientId, timeSlotId) => {
        VALUES ($1, $2, $3, 'booked')
        RETURNING *`,
       [clientId, slot.provider_id, timeSlotId],
-    );
+    )
 
     // Mark time slot as booked
-    await client.query("UPDATE time_slots SET is_booked = true WHERE id = $1", [
+    await client.query('UPDATE time_slots SET is_booked = true WHERE id = $1', [
       timeSlotId,
-    ]);
+    ])
 
-    await client.query("COMMIT");
+    await client.query('COMMIT')
 
     // Get complete appointment details
-    const appointment = await getAppointmentById(appointmentResult.rows[0].id);
+    const appointment = await getAppointmentById(appointmentResult.rows[0].id)
 
-    logger.info(`Appointment ${appointment.id} created for client ${clientId}`);
-    return appointment;
+    logger.info(`Appointment ${appointment.id} created for client ${clientId}`)
+    return appointment
   } catch (error) {
-    await client.query("ROLLBACK");
-    logger.error("Error booking appointment:", error);
-    throw error;
+    await client.query('ROLLBACK')
+    logger.error('Error booking appointment:', error)
+    throw error
   } finally {
-    client.release();
+    client.release()
   }
-};
+}
 
 /**
  * Get appointment by ID with full details
@@ -97,14 +97,14 @@ export const getAppointmentById = async (appointmentId) => {
     JOIN time_slots ts ON a.time_slot_id = ts.id
     WHERE a.id = $1`,
     [appointmentId],
-  );
+  )
 
   if (result.rows.length === 0) {
-    return null;
+    return null
   }
 
-  return result.rows[0];
-};
+  return result.rows[0]
+}
 
 /**
  * Get all appointments for a client
@@ -128,24 +128,24 @@ export const getClientAppointments = async (clientId, status = null) => {
     JOIN users pu ON sp.user_id = pu.id
     JOIN time_slots ts ON a.time_slot_id = ts.id
     WHERE a.client_id = $1
-  `;
+  `
 
-  const params = [clientId];
+  const params = [clientId]
 
   if (status) {
-    query += " AND a.status = $2";
-    params.push(status);
+    query += ' AND a.status = $2'
+    params.push(status)
   }
 
-  query += " ORDER BY ts.slot_date DESC, ts.start_time DESC";
+  query += ' ORDER BY ts.slot_date DESC, ts.start_time DESC'
 
-  const result = await pool.query(query, params);
+  const result = await pool.query(query, params)
 
   logger.info(
     `Retrieved ${result.rows.length} appointments for client ${clientId}`,
-  );
-  return result.rows;
-};
+  )
+  return result.rows
+}
 
 /**
  * Get all appointments for a provider
@@ -167,24 +167,24 @@ export const getProviderAppointments = async (providerId, status = null) => {
     JOIN users u ON a.client_id = u.id
     JOIN time_slots ts ON a.time_slot_id = ts.id
     WHERE a.provider_id = $1
-  `;
+  `
 
-  const params = [providerId];
+  const params = [providerId]
 
   if (status) {
-    query += " AND a.status = $2";
-    params.push(status);
+    query += ' AND a.status = $2'
+    params.push(status)
   }
 
-  query += " ORDER BY ts.slot_date DESC, ts.start_time DESC";
+  query += ' ORDER BY ts.slot_date DESC, ts.start_time DESC'
 
-  const result = await pool.query(query, params);
+  const result = await pool.query(query, params)
 
   logger.info(
     `Retrieved ${result.rows.length} appointments for provider ${providerId}`,
-  );
-  return result.rows;
-};
+  )
+  return result.rows
+}
 
 /**
  * Cancel an appointment
@@ -194,10 +194,10 @@ export const getProviderAppointments = async (providerId, status = null) => {
  * @returns {Object} Updated appointment data
  */
 export const cancelAppointment = async (appointmentId, userId, userRole) => {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    await client.query("BEGIN");
+    await client.query('BEGIN')
 
     // Get appointment details
     const appointmentResult = await client.query(
@@ -206,31 +206,31 @@ export const cancelAppointment = async (appointmentId, userId, userRole) => {
        JOIN service_providers sp ON a.provider_id = sp.id
        WHERE a.id = $1`,
       [appointmentId],
-    );
+    )
 
     if (appointmentResult.rows.length === 0) {
-      throw new Error("Appointment not found");
+      throw new Error('Appointment not found')
     }
 
-    const appointment = appointmentResult.rows[0];
+    const appointment = appointmentResult.rows[0]
 
     // Verify user is authorized to cancel
-    const isClient = userRole === "client" && appointment.client_id === userId;
+    const isClient = userRole === 'client' && appointment.client_id === userId
     const isProvider =
-      userRole === "provider" && appointment.provider_user_id === userId;
+      userRole === 'provider' && appointment.provider_user_id === userId
 
     if (!isClient && !isProvider) {
-      throw new Error("Not authorized to cancel this appointment");
+      throw new Error('Not authorized to cancel this appointment')
     }
 
     // Check if already cancelled
-    if (appointment.status === "cancelled") {
-      throw new Error("Appointment is already cancelled");
+    if (appointment.status === 'cancelled') {
+      throw new Error('Appointment is already cancelled')
     }
 
     // Check if already completed
-    if (appointment.status === "completed") {
-      throw new Error("Cannot cancel a completed appointment");
+    if (appointment.status === 'completed') {
+      throw new Error('Cannot cancel a completed appointment')
     }
 
     // Update appointment status
@@ -239,31 +239,31 @@ export const cancelAppointment = async (appointmentId, userId, userRole) => {
        SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1`,
       [appointmentId],
-    );
+    )
 
     // Make time slot available again
     await client.query(
-      "UPDATE time_slots SET is_booked = false WHERE id = $1",
+      'UPDATE time_slots SET is_booked = false WHERE id = $1',
       [appointment.time_slot_id],
-    );
+    )
 
-    await client.query("COMMIT");
+    await client.query('COMMIT')
 
     // Get updated appointment details
-    const updatedAppointment = await getAppointmentById(appointmentId);
+    const updatedAppointment = await getAppointmentById(appointmentId)
 
     logger.info(
       `Appointment ${appointmentId} cancelled by ${userRole} ${userId}`,
-    );
-    return updatedAppointment;
+    )
+    return updatedAppointment
   } catch (error) {
-    await client.query("ROLLBACK");
-    logger.error("Error cancelling appointment:", error);
-    throw error;
+    await client.query('ROLLBACK')
+    logger.error('Error cancelling appointment:', error)
+    throw error
   } finally {
-    client.release();
+    client.release()
   }
-};
+}
 
 /**
  * Mark an appointment as completed (provider only)
@@ -272,10 +272,10 @@ export const cancelAppointment = async (appointmentId, userId, userRole) => {
  * @returns {Object} Updated appointment data
  */
 export const completeAppointment = async (appointmentId, providerUserId) => {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    await client.query("BEGIN");
+    await client.query('BEGIN')
 
     // Get appointment and verify provider
     const appointmentResult = await client.query(
@@ -284,26 +284,26 @@ export const completeAppointment = async (appointmentId, providerUserId) => {
        JOIN service_providers sp ON a.provider_id = sp.id
        WHERE a.id = $1`,
       [appointmentId],
-    );
+    )
 
     if (appointmentResult.rows.length === 0) {
-      throw new Error("Appointment not found");
+      throw new Error('Appointment not found')
     }
 
-    const appointment = appointmentResult.rows[0];
+    const appointment = appointmentResult.rows[0]
 
     // Verify provider authorization
     if (appointment.provider_user_id !== providerUserId) {
-      throw new Error("Not authorized to complete this appointment");
+      throw new Error('Not authorized to complete this appointment')
     }
 
     // Check if already completed or cancelled
-    if (appointment.status === "completed") {
-      throw new Error("Appointment is already marked as completed");
+    if (appointment.status === 'completed') {
+      throw new Error('Appointment is already marked as completed')
     }
 
-    if (appointment.status === "cancelled") {
-      throw new Error("Cannot complete a cancelled appointment");
+    if (appointment.status === 'cancelled') {
+      throw new Error('Cannot complete a cancelled appointment')
     }
 
     // Update appointment status
@@ -312,25 +312,25 @@ export const completeAppointment = async (appointmentId, providerUserId) => {
        SET status = 'completed', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1`,
       [appointmentId],
-    );
+    )
 
-    await client.query("COMMIT");
+    await client.query('COMMIT')
 
     // Get updated appointment details
-    const updatedAppointment = await getAppointmentById(appointmentId);
+    const updatedAppointment = await getAppointmentById(appointmentId)
 
     logger.info(
       `Appointment ${appointmentId} marked as completed by provider ${providerUserId}`,
-    );
-    return updatedAppointment;
+    )
+    return updatedAppointment
   } catch (error) {
-    await client.query("ROLLBACK");
-    logger.error("Error completing appointment:", error);
-    throw error;
+    await client.query('ROLLBACK')
+    logger.error('Error completing appointment:', error)
+    throw error
   } finally {
-    client.release();
+    client.release()
   }
-};
+}
 
 /**
  * Get public summary of provider appointments (no client PII)
@@ -356,21 +356,21 @@ export const getProviderAppointmentsSummary = async (
     FROM appointments a
     JOIN time_slots ts ON a.time_slot_id = ts.id
     WHERE a.provider_id = $1
-  `;
+  `
 
-  const params = [providerId];
+  const params = [providerId]
 
   if (status) {
-    query += " AND a.status = $2";
-    params.push(status);
+    query += ' AND a.status = $2'
+    params.push(status)
   }
 
-  query += " ORDER BY ts.slot_date DESC, ts.start_time DESC";
+  query += ' ORDER BY ts.slot_date DESC, ts.start_time DESC'
 
-  const result = await pool.query(query, params);
+  const result = await pool.query(query, params)
 
   logger.info(
     `Retrieved ${result.rows.length} appointment summaries for provider ${providerId}`,
-  );
-  return result.rows;
-};
+  )
+  return result.rows
+}

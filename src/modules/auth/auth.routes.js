@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { registrationHandler, loginHandler } from "./auth.controller.js";
-import { validateRegistration, validateLogin } from "./auth.validation.js";
+import { Router } from 'express'
+import { registrationHandler, loginHandler } from './auth.controller.js'
+import { validateRegistration, validateLogin } from './auth.validation.js'
 
-const router = Router();
+const router = Router()
 
 /**
  * @swagger
@@ -80,7 +80,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/register", validateRegistration, registrationHandler);
+router.post('/register', validateRegistration, registrationHandler)
 
 /**
  * @swagger
@@ -151,6 +151,6 @@ router.post("/register", validateRegistration, registrationHandler);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/login", validateLogin, loginHandler);
+router.post('/login', validateLogin, loginHandler)
 
-export default router;
+export default router

@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express'
 import {
   bookAppointmentHandler,
   getMyAppointmentsHandler,
@@ -6,11 +6,11 @@ import {
   cancelAppointmentHandler,
   completeAppointmentHandler,
   getAppointmentByIdHandler,
-} from "./appointment.controller.js";
+} from './appointment.controller.js'
 import {
   authenticateToken,
   authorizeRoles,
-} from "../../middleware/auth.middleware.js";
+} from '../../middleware/auth.middleware.js'
 import {
   validateBody,
   validateQuery,
@@ -19,9 +19,9 @@ import {
   appointmentStatusQuerySchema,
   appointmentIdParamSchema,
   providerIdParamSchema,
-} from "./appointment.validation.js";
+} from './appointment.validation.js'
 
-const router = express.Router();
+const router = express.Router()
 
 /**
  * @swagger
@@ -65,12 +65,12 @@ const router = express.Router();
  *         description: Unauthorized
  */
 router.post(
-  "/",
+  '/',
   authenticateToken,
-  authorizeRoles("client"),
+  authorizeRoles('client'),
   validateBody(bookAppointmentSchema),
   bookAppointmentHandler,
-);
+)
 
 /**
  * @swagger
@@ -107,11 +107,11 @@ router.post(
  *         description: Unauthorized
  */
 router.get(
-  "/my-appointments",
+  '/my-appointments',
   authenticateToken,
   validateQuery(appointmentStatusQuerySchema),
   getMyAppointmentsHandler,
-);
+)
 
 /**
  * @swagger
@@ -154,13 +154,13 @@ router.get(
  *         description: Unauthorized
  */
 router.get(
-  "/provider/:providerId",
+  '/provider/:providerId',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   validateParams(providerIdParamSchema),
   validateQuery(appointmentStatusQuerySchema),
   getProviderAppointmentsHandler,
-);
+)
 
 /**
  * @swagger
@@ -197,11 +197,11 @@ router.get(
  *         description: Unauthorized
  */
 router.get(
-  "/:id",
+  '/:id',
   authenticateToken,
   validateParams(appointmentIdParamSchema),
   getAppointmentByIdHandler,
-);
+)
 
 /**
  * @swagger
@@ -238,11 +238,11 @@ router.get(
  *         description: Unauthorized
  */
 router.put(
-  "/:id/cancel",
+  '/:id/cancel',
   authenticateToken,
   validateParams(appointmentIdParamSchema),
   cancelAppointmentHandler,
-);
+)
 
 /**
  * @swagger
@@ -281,11 +281,11 @@ router.put(
  *         description: Unauthorized
  */
 router.put(
-  "/:id/complete",
+  '/:id/complete',
   authenticateToken,
-  authorizeRoles("provider"),
+  authorizeRoles('provider'),
   validateParams(appointmentIdParamSchema),
   completeAppointmentHandler,
-);
+)
 
-export default router;
+export default router

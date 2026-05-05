@@ -1,17 +1,17 @@
-import { emitToUser, emitToUsers } from "../socket/socket.handler.js";
-import logger from "../utils/logger.js";
+import { emitToUser, emitToUsers } from '../socket/socket.handler.js'
+import logger from '../utils/logger.js'
 
 /**
  * Notification types
  */
 export const NOTIFICATION_TYPES = {
-  APPOINTMENT_BOOKED: "appointment:booked",
-  APPOINTMENT_CANCELLED: "appointment:cancelled",
-  APPOINTMENT_COMPLETED: "appointment:completed",
-  APPOINTMENT_REMINDER: "appointment:reminder",
-  SLOT_CREATED: "slot:created",
-  SLOT_UPDATED: "slot:updated",
-};
+  APPOINTMENT_BOOKED: 'appointment:booked',
+  APPOINTMENT_CANCELLED: 'appointment:cancelled',
+  APPOINTMENT_COMPLETED: 'appointment:completed',
+  APPOINTMENT_REMINDER: 'appointment:reminder',
+  SLOT_CREATED: 'slot:created',
+  SLOT_UPDATED: 'slot:updated',
+}
 
 /**
  * Send appointment booked notification
@@ -30,7 +30,7 @@ export const notifyAppointmentBooked = (appointment) => {
       appointment.provider_user_id,
       NOTIFICATION_TYPES.APPOINTMENT_BOOKED,
       {
-        type: "appointment_booked",
+        type: 'appointment_booked',
         message: `New appointment booked by ${appointment.client.name}`,
         appointment: {
           id: appointment.id,
@@ -44,11 +44,11 @@ export const notifyAppointmentBooked = (appointment) => {
           },
         },
       },
-    );
+    )
 
     // Notify client (confirmation)
     emitToUser(appointment.client_id, NOTIFICATION_TYPES.APPOINTMENT_BOOKED, {
-      type: "appointment_confirmation",
+      type: 'appointment_confirmation',
       message: `Your appointment with ${appointment.provider.name} has been confirmed`,
       appointment: {
         id: appointment.id,
@@ -60,15 +60,15 @@ export const notifyAppointmentBooked = (appointment) => {
           specialization: appointment.provider.specialization,
         },
       },
-    });
+    })
 
     logger.info(
       `Notifications sent for appointment booking: appointment_id=${appointment.id}`,
-    );
+    )
   } catch (error) {
-    logger.error("Error sending appointment booked notification", error);
+    logger.error('Error sending appointment booked notification', error)
   }
-};
+}
 
 /**
  * Send appointment cancelled notification
@@ -83,34 +83,34 @@ export const notifyAppointmentBooked = (appointment) => {
  */
 export const notifyAppointmentCancelled = (appointment, cancelledBy) => {
   try {
-    const userIds = [appointment.client_id, appointment.provider_user_id];
+    const userIds = [appointment.client_id, appointment.provider_user_id]
 
     // Notify both client and provider
     userIds.forEach((userId) => {
-      const isClient = userId === appointment.client_id;
+      const isClient = userId === appointment.client_id
       const wasInitiator =
-        (cancelledBy === "client" && isClient) ||
-        (cancelledBy === "provider" && !isClient);
+        (cancelledBy === 'client' && isClient) ||
+        (cancelledBy === 'provider' && !isClient)
 
-      let message;
+      let message
       if (wasInitiator) {
-        message = "Your appointment has been cancelled";
+        message = 'Your appointment has been cancelled'
       } else {
         const otherParty = isClient
           ? appointment.provider.name
-          : appointment.client.name;
-        message = `Appointment with ${otherParty} has been cancelled`;
+          : appointment.client.name
+        message = `Appointment with ${otherParty} has been cancelled`
       }
 
       emitToUser(userId, NOTIFICATION_TYPES.APPOINTMENT_CANCELLED, {
-        type: "appointment_cancelled",
+        type: 'appointment_cancelled',
         message,
         appointment: {
           id: appointment.id,
           date: appointment.slot.slot_date,
           time: appointment.slot.start_time,
           cancelledBy,
-          [isClient ? "provider" : "client"]: isClient
+          [isClient ? 'provider' : 'client']: isClient
             ? {
                 name: appointment.provider.name,
                 specialization: appointment.provider.specialization,
@@ -120,16 +120,16 @@ export const notifyAppointmentCancelled = (appointment, cancelledBy) => {
                 email: appointment.client.email,
               },
         },
-      });
-    });
+      })
+    })
 
     logger.info(
       `Notifications sent for appointment cancellation: appointment_id=${appointment.id}, cancelled_by=${cancelledBy}`,
-    );
+    )
   } catch (error) {
-    logger.error("Error sending appointment cancelled notification", error);
+    logger.error('Error sending appointment cancelled notification', error)
   }
-};
+}
 
 /**
  * Send appointment completed notification
@@ -144,7 +144,7 @@ export const notifyAppointmentCompleted = (appointment) => {
       appointment.client_id,
       NOTIFICATION_TYPES.APPOINTMENT_COMPLETED,
       {
-        type: "appointment_completed",
+        type: 'appointment_completed',
         message: `Your appointment with ${appointment.provider.name} has been completed`,
         appointment: {
           id: appointment.id,
@@ -154,15 +154,15 @@ export const notifyAppointmentCompleted = (appointment) => {
           },
         },
       },
-    );
+    )
 
     logger.info(
       `Completion notification sent: appointment_id=${appointment.id}`,
-    );
+    )
   } catch (error) {
-    logger.error("Error sending appointment completed notification", error);
+    logger.error('Error sending appointment completed notification', error)
   }
-};
+}
 
 /**
  * Send appointment reminder notification
@@ -174,10 +174,10 @@ export const notifyAppointmentCompleted = (appointment) => {
  */
 export const notifyAppointmentReminder = (appointment) => {
   try {
-    const userIds = [appointment.client_id, appointment.provider_user_id];
+    const userIds = [appointment.client_id, appointment.provider_user_id]
 
     emitToUsers(userIds, NOTIFICATION_TYPES.APPOINTMENT_REMINDER, {
-      type: "appointment_reminder",
+      type: 'appointment_reminder',
       message: `Reminder: You have an appointment tomorrow`,
       appointment: {
         id: appointment.id,
@@ -188,10 +188,10 @@ export const notifyAppointmentReminder = (appointment) => {
           specialization: appointment.provider.specialization,
         },
       },
-    });
+    })
 
-    logger.info(`Reminder sent: appointment_id=${appointment.id}`);
+    logger.info(`Reminder sent: appointment_id=${appointment.id}`)
   } catch (error) {
-    logger.error("Error sending appointment reminder", error);
+    logger.error('Error sending appointment reminder', error)
   }
-};
+}

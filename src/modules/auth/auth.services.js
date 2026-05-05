@@ -1,8 +1,8 @@
-import { pool } from "../../config/database.js";
-import logger from "../../utils/logger.js";
-import bcrypt from "bcryptjs";
+import { pool } from '../../config/database.js'
+import logger from '../../utils/logger.js'
+import bcrypt from 'bcryptjs'
 
-const HASH_SALT = 10;
+const HASH_SALT = 10
 
 /**
  * Check if a user with the given email already exists
@@ -10,10 +10,10 @@ const HASH_SALT = 10;
  * @returns {Promise<boolean>} - True if user exists, false otherwise
  */
 const userExists = async (email) => {
-  const query = "SELECT email FROM users WHERE email = $1";
-  const result = await pool.query(query, [email]);
-  return result.rows.length > 0;
-};
+  const query = 'SELECT email FROM users WHERE email = $1'
+  const result = await pool.query(query, [email])
+  return result.rows.length > 0
+}
 
 /**
  * Hash a plain text password
@@ -21,8 +21,8 @@ const userExists = async (email) => {
  * @returns {Promise<string>} - Hashed password
  */
 const hashPassword = async (password) => {
-  return await bcrypt.hash(password, HASH_SALT);
-};
+  return await bcrypt.hash(password, HASH_SALT)
+}
 
 /**
  * Create a new user in the database
@@ -36,45 +36,45 @@ const hashPassword = async (password) => {
 export const createUser = async ({ name, email, password, role }) => {
   try {
     // Check if user already exists
-    const exists = await userExists(email);
+    const exists = await userExists(email)
     if (exists) {
       logger.warn(
         `Registration failed: User with email already exists - ${email}`,
-      );
-      const error = new Error(`User with email ${email} already exists`);
-      error.status = 409;
-      throw error;
+      )
+      const error = new Error(`User with email ${email} already exists`)
+      error.status = 409
+      throw error
     }
 
     // Hash the password
-    const hashedPassword = await hashPassword(password);
-    logger.debug(`Password hashed for email - ${email}`);
+    const hashedPassword = await hashPassword(password)
+    logger.debug(`Password hashed for email - ${email}`)
 
     // Insert user into database
     const insertQuery = `
       INSERT INTO users (name, email, password_hash, role) 
       VALUES ($1, $2, $3, $4) 
       RETURNING id, name, email, role, created_at
-    `;
+    `
 
     const result = await pool.query(insertQuery, [
       name,
       email,
       hashedPassword,
       role,
-    ]);
+    ])
 
-    const newUser = result.rows[0];
+    const newUser = result.rows[0]
     logger.info(
       `User registered successfully: ID=${newUser.id}, Role=${newUser.role}`,
-    );
+    )
 
-    return newUser;
+    return newUser
   } catch (error) {
-    logger.error("Error creating user", { email, error: error.message });
-    throw error;
+    logger.error('Error creating user', { email, error: error.message })
+    throw error
   }
-};
+}
 
 /**
  * Authenticate user credentials
@@ -85,35 +85,35 @@ export const createUser = async ({ name, email, password, role }) => {
 export const authenticateUser = async (email, password) => {
   try {
     const query =
-      "SELECT id, name, email, password_hash, role FROM users WHERE email = $1";
-    const result = await pool.query(query, [email]);
+      'SELECT id, name, email, password_hash, role FROM users WHERE email = $1'
+    const result = await pool.query(query, [email])
 
     if (result.rows.length === 0) {
-      logger.warn(`Authentication failed: No user found with email - ${email}`);
-      const error = new Error("Invalid email or password");
-      error.status = 401;
-      throw error;
+      logger.warn(`Authentication failed: No user found with email - ${email}`)
+      const error = new Error('Invalid email or password')
+      error.status = 401
+      throw error
     }
 
-    const user = result.rows[0];
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    const user = result.rows[0]
+    const passwordMatch = await bcrypt.compare(password, user.password_hash)
 
     if (!passwordMatch) {
       logger.warn(
         `Authentication failed: Incorrect password for email - ${email}`,
-      );
-      const error = new Error("Invalid email or password");
-      error.status = 401;
-      throw error;
+      )
+      const error = new Error('Invalid email or password')
+      error.status = 401
+      throw error
     }
 
     logger.info(
       `User authenticated successfully: ID=${user.id}, Email=${user.email}`,
-    );
-    delete user.password_hash; // Remove password hash before returning user object
-    return user;
+    )
+    delete user.password_hash // Remove password hash before returning user object
+    return user
   } catch (error) {
-    logger.error("Error authenticating user", { email, error: error.message });
-    throw error;
+    logger.error('Error authenticating user', { email, error: error.message })
+    throw error
   }
-};
+}

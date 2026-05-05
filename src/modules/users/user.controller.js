@@ -3,8 +3,8 @@ import {
   updateUserProfile,
   updateUserPassword,
   deleteUser,
-} from "./user.service.js";
-import logger from "../../utils/logger.js";
+} from './user.service.js'
+import logger from '../../utils/logger.js'
 
 /**
  * Get current user profile
@@ -12,21 +12,21 @@ import logger from "../../utils/logger.js";
  */
 export const getProfile = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const user = await getUserById(userId);
+    const userId = req.user.id
+    const user = await getUserById(userId)
 
     res.status(200).json({
-      message: "Profile retrieved successfully",
+      message: 'Profile retrieved successfully',
       user,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Get profile error", error);
-    next(error);
+    logger.error('Get profile error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Update current user profile
@@ -34,23 +34,23 @@ export const getProfile = async (req, res, next) => {
  */
 export const updateProfile = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const { name, email } = req.body;
+    const userId = req.user.id
+    const { name, email } = req.body
 
-    const updatedUser = await updateUserProfile(userId, { name, email });
+    const updatedUser = await updateUserProfile(userId, { name, email })
 
     res.status(200).json({
-      message: "Profile updated successfully",
+      message: 'Profile updated successfully',
       user: updatedUser,
-    });
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Update profile error", error);
-    next(error);
+    logger.error('Update profile error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Change user password
@@ -58,22 +58,22 @@ export const updateProfile = async (req, res, next) => {
  */
 export const changePassword = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id
+    const { oldPassword, newPassword } = req.body
 
-    await updateUserPassword(userId, oldPassword, newPassword);
+    await updateUserPassword(userId, oldPassword, newPassword)
 
     res.status(200).json({
-      message: "Password updated successfully",
-    });
+      message: 'Password updated successfully',
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Change password error", error);
-    next(error);
+    logger.error('Change password error', error)
+    next(error)
   }
-};
+}
 
 /**
  * Delete user account
@@ -81,18 +81,18 @@ export const changePassword = async (req, res, next) => {
  */
 export const deleteAccount = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id
 
-    await deleteUser(userId);
+    await deleteUser(userId)
 
     res.status(200).json({
-      message: "Account deleted successfully",
-    });
+      message: 'Account deleted successfully',
+    })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      return res.status(error.status).json({ message: error.message })
     }
-    logger.error("Delete account error", error);
-    next(error);
+    logger.error('Delete account error', error)
+    next(error)
   }
-};
+}
