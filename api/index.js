@@ -3,7 +3,7 @@ import express, { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
-import swaggerSpec from './config/swagger.js'
+import swaggerSpec from '../src/config/swagger.js'
 
 import authRouter from '../src/modules/auth/auth.routes.js'
 import userRouter from '../src/modules/users/user.routes.js'
