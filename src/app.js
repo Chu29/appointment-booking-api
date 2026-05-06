@@ -1,4 +1,3 @@
-import dotenv from 'dotenv/config'
 import createError from 'http-errors'
 import express, { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
@@ -146,7 +145,7 @@ app.use(function (req, res, next) {
 })
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res, _next) {
   const statusCode = err.status || 500
   res.status(statusCode).json({
     status: statusCode,

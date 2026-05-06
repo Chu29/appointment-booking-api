@@ -120,9 +120,6 @@ export const updateProviderProfile = async (
   { specialization, description },
 ) => {
   try {
-    // First check if provider exists
-    const provider = await getProviderByUserId(userId)
-
     const updates = []
     const values = []
     let paramCount = 1
