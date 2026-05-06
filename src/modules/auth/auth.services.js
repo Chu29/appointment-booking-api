@@ -2,8 +2,6 @@ import { pool } from '../../config/database.js'
 import logger from '../../utils/logger.js'
 import bcrypt from 'bcryptjs'
 
-const HASH_SALT = 10
-
 /**
  * Check if a user with the given email already exists
  * @param {string} email - User email
@@ -21,7 +19,7 @@ const userExists = async (email) => {
  * @returns {Promise<string>} - Hashed password
  */
 const hashPassword = async (password) => {
-  return await bcrypt.hash(password, HASH_SALT)
+  return await bcrypt.hash(password, process.env.HASH_SALT)
 }
 
 /**
