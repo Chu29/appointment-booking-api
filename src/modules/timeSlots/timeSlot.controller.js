@@ -24,12 +24,18 @@ export const createSlot = async (req, res, next) => {
     })
 
     res.status(201).json({
+      success: true,
       message: 'Time slot created successfully',
-      timeSlot,
+      data: {
+        timeSlot,
+      },
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Create time slot error', error)
     next(error)
@@ -46,13 +52,17 @@ export const getMySlots = async (req, res, next) => {
     const timeSlots = await getProviderTimeSlots(userId)
 
     res.status(200).json({
+      success: true,
       message: 'Time slots retrieved successfully',
       count: timeSlots.length,
-      timeSlots,
+      data: timeSlots,
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Get my slots error', error)
     next(error)
@@ -75,13 +85,17 @@ export const getAvailableSlots = async (req, res, next) => {
     )
 
     res.status(200).json({
+      success: true,
       message: 'Available time slots retrieved successfully',
       count: timeSlots.length,
-      timeSlots,
+      data: timeSlots,
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Get available slots error', error)
     next(error)
@@ -106,12 +120,18 @@ export const updateSlot = async (req, res, next) => {
     })
 
     res.status(200).json({
+      success: true,
       message: 'Time slot updated successfully',
-      timeSlot: updatedSlot,
+      data: {
+        timeSlot: updatedSlot,
+      },
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Update time slot error', error)
     next(error)
@@ -130,11 +150,15 @@ export const deleteSlot = async (req, res, next) => {
     await deleteTimeSlot(slotId, userId)
 
     res.status(200).json({
+      success: true,
       message: 'Time slot deleted successfully',
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Delete time slot error', error)
     next(error)

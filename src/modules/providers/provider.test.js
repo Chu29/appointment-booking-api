@@ -110,9 +110,10 @@ describe('Provider module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Providers retrieved successfully',
         count: 2,
-        providers: [
+        data: [
           expect.objectContaining({
             id: second.provider.id,
             name: second.user.name,
@@ -154,17 +155,20 @@ describe('Provider module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Provider profile retrieved successfully',
-        provider: expect.objectContaining({
-          id: provider.id,
-          user_id: user.id,
-          name: user.name,
-          email: user.email,
-          role: 'provider',
-          specialization: provider.specialization,
-          description: provider.description,
-          created_at: expect.any(String),
-        }),
+        data: {
+          provider: expect.objectContaining({
+            id: provider.id,
+            user_id: user.id,
+            name: user.name,
+            email: user.email,
+            role: 'provider',
+            specialization: provider.specialization,
+            description: provider.description,
+            created_at: expect.any(String),
+          }),
+        },
       })
     })
 
@@ -194,6 +198,7 @@ describe('Provider module', () => {
 
       expect(response.status).toBe(404)
       expect(response.body).toEqual({
+        success: false,
         message: 'Provider profile not found',
       })
     })
@@ -213,14 +218,17 @@ describe('Provider module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Provider profile updated successfully',
-        provider: expect.objectContaining({
-          id: provider.id,
-          user_id: user.id,
-          specialization: 'Sports Medicine',
-          description: 'Injury prevention and recovery',
-          created_at: expect.any(String),
-        }),
+        data: {
+          provider: expect.objectContaining({
+            id: provider.id,
+            user_id: user.id,
+            specialization: 'Sports Medicine',
+            description: 'Injury prevention and recovery',
+            created_at: expect.any(String),
+          }),
+        },
       })
 
       const dbResult = await pool.query(
@@ -246,7 +254,7 @@ describe('Provider module', () => {
         .send({ description: 'Preventive care and wellness' })
 
       expect(response.status).toBe(200)
-      expect(response.body.provider).toEqual(
+      expect(response.body.data.provider).toEqual(
         expect.objectContaining({
           specialization: 'Family Medicine',
           description: 'Preventive care and wellness',
@@ -264,6 +272,7 @@ describe('Provider module', () => {
 
       expect(emptyResponse.status).toBe(400)
       expect(emptyResponse.body).toEqual({
+        success: false,
         message: 'Validation failed',
         errors: [
           {
@@ -283,6 +292,7 @@ describe('Provider module', () => {
         })
 
       expect(oversizedResponse.status).toBe(400)
+      expect(oversizedResponse.body.success).toBe(false)
       expect(oversizedResponse.body.errors).toEqual(
         expect.arrayContaining([
           {
@@ -307,6 +317,7 @@ describe('Provider module', () => {
 
       expect(response.status).toBe(404)
       expect(response.body).toEqual({
+        success: false,
         message: 'Provider profile not found',
       })
     })

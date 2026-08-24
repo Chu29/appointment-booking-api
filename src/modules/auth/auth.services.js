@@ -19,7 +19,8 @@ const userExists = async (email) => {
  * @returns {Promise<string>} - Hashed password
  */
 const hashPassword = async (password) => {
-  return await bcrypt.hash(password, process.env.HASH_SALT)
+  const saltRounds = parseInt(process.env.HASH_SALT, 10) || 10
+  return await bcrypt.hash(password, saltRounds)
 }
 
 /**
@@ -32,6 +33,7 @@ const hashPassword = async (password) => {
  * @returns {Promise<Object>} - Created user object
  */
 export const createUser = async ({ name, email, password, role }) => {
+  const client = await pool.connect()
   try {
     // Check if user already exists
     const exists = await userExists(email)
@@ -48,6 +50,8 @@ export const createUser = async ({ name, email, password, role }) => {
     const hashedPassword = await hashPassword(password)
     logger.debug(`Password hashed for email - ${email}`)
 
+    await client.query('BEGIN')
+
     // Insert user into database
     const insertQuery = `
       INSERT INTO users (name, email, password_hash, role) 
@@ -55,7 +59,7 @@ export const createUser = async ({ name, email, password, role }) => {
       RETURNING id, name, email, role, created_at
     `
 
-    const result = await pool.query(insertQuery, [
+    const result = await client.query(insertQuery, [
       name,
       email,
       hashedPassword,
@@ -63,14 +67,29 @@ export const createUser = async ({ name, email, password, role }) => {
     ])
 
     const newUser = result.rows[0]
+
+    // If registered as provider, automatically create initial service_provider profile
+    if (role === 'provider') {
+      await client.query(
+        `INSERT INTO service_providers (user_id) VALUES ($1)`,
+        [newUser.id],
+      )
+      logger.info(`Initialized provider profile for user ID=${newUser.id}`)
+    }
+
+    await client.query('COMMIT')
+
     logger.info(
       `User registered successfully: ID=${newUser.id}, Role=${newUser.role}`,
     )
 
     return newUser
   } catch (error) {
+    await client.query('ROLLBACK')
     logger.error('Error creating user', { email, error: error.message })
     throw error
+  } finally {
+    client.release()
   }
 }
 

@@ -129,22 +129,25 @@ describe('Time slot module', () => {
 
       expect(response.status).toBe(201)
       expect(response.body).toEqual({
+        success: true,
         message: 'Time slot created successfully',
-        timeSlot: expect.objectContaining({
-          id: expect.any(Number),
-          provider_id: provider.id,
-          slot_date: expect.any(String),
-          start_time: '09:00:00',
-          end_time: '10:00:00',
-          duration: 60,
-          is_booked: false,
-          created_at: expect.any(String),
-        }),
+        data: {
+          timeSlot: expect.objectContaining({
+            id: expect.any(Number),
+            provider_id: provider.id,
+            slot_date: expect.any(String),
+            start_time: '09:00:00',
+            end_time: '10:00:00',
+            duration: 60,
+            is_booked: false,
+            created_at: expect.any(String),
+          }),
+        },
       })
 
       const dbResult = await pool.query(
         'SELECT provider_id, start_time, end_time, duration, is_booked FROM time_slots WHERE id = $1',
-        [response.body.timeSlot.id],
+        [response.body.data.timeSlot.id],
       )
 
       expect(dbResult.rows[0]).toEqual({
@@ -195,6 +198,7 @@ describe('Time slot module', () => {
         })
 
       expect(validationResponse.status).toBe(400)
+      expect(validationResponse.body.success).toBe(false)
       expect(validationResponse.body.message).toBe('Validation failed')
       expect(validationResponse.body.errors).toEqual(
         expect.arrayContaining([
@@ -239,6 +243,7 @@ describe('Time slot module', () => {
 
       expect(response.status).toBe(409)
       expect(response.body).toEqual({
+        success: false,
         message: 'Time slot already exists for this date and time',
       })
     })
@@ -265,9 +270,10 @@ describe('Time slot module', () => {
         .set('Authorization', `Bearer ${tokenFor(user)}`)
 
       expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
       expect(response.body.count).toBe(2)
       expect(response.body.message).toBe('Time slots retrieved successfully')
-      expect(response.body.timeSlots[0]).toEqual(
+      expect(response.body.data[0]).toEqual(
         expect.objectContaining({
           id: firstSlot.id,
           provider_id: provider.id,
@@ -312,9 +318,10 @@ describe('Time slot module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Available time slots retrieved successfully',
         count: 1,
-        timeSlots: [
+        data: [
           expect.objectContaining({
             id: availableSlot.id,
             provider_id: provider.id,
@@ -345,14 +352,17 @@ describe('Time slot module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Time slot updated successfully',
-        timeSlot: expect.objectContaining({
-          id: slot.id,
-          provider_id: provider.id,
-          start_time: '13:00:00',
-          end_time: '14:30:00',
-          duration: 90,
-        }),
+        data: {
+          timeSlot: expect.objectContaining({
+            id: slot.id,
+            provider_id: provider.id,
+            start_time: '13:00:00',
+            end_time: '14:30:00',
+            duration: 90,
+          }),
+        },
       })
     })
 
@@ -366,10 +376,11 @@ describe('Time slot module', () => {
         .send({})
       expect(emptyResponse.status).toBe(400)
       expect(emptyResponse.body).toEqual({
+        success: false,
         message: 'Validation failed',
         errors: [
           {
-            field: undefined,
+            field: 'end_time',
             message: 'At least one field must be provided to update',
           },
         ],
@@ -380,6 +391,7 @@ describe('Time slot module', () => {
         .set('Authorization', `Bearer ${tokenFor(user)}`)
         .send({ start_time: '24:01', duration: 481 })
       expect(invalidResponse.status).toBe(400)
+      expect(invalidResponse.body.success).toBe(false)
       expect(invalidResponse.body.errors).toEqual(
         expect.arrayContaining([
           {
@@ -417,6 +429,7 @@ describe('Time slot module', () => {
         .send({ duration: 45 })
       expect(notFoundResponse.status).toBe(404)
       expect(notFoundResponse.body).toEqual({
+        success: false,
         message: 'Time slot not found or does not belong to you',
       })
 
@@ -426,6 +439,7 @@ describe('Time slot module', () => {
         .send({ duration: 45 })
       expect(bookedResponse.status).toBe(400)
       expect(bookedResponse.body).toEqual({
+        success: false,
         message: 'Cannot update a booked time slot',
       })
     })
@@ -442,6 +456,7 @@ describe('Time slot module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Time slot deleted successfully',
       })
 
@@ -474,6 +489,7 @@ describe('Time slot module', () => {
         .set('Authorization', `Bearer ${tokenFor(user)}`)
       expect(notFoundResponse.status).toBe(404)
       expect(notFoundResponse.body).toEqual({
+        success: false,
         message: 'Time slot not found or does not belong to you',
       })
 
@@ -482,6 +498,7 @@ describe('Time slot module', () => {
         .set('Authorization', `Bearer ${tokenFor(user)}`)
       expect(bookedResponse.status).toBe(400)
       expect(bookedResponse.body).toEqual({
+        success: false,
         message: 'Cannot delete a booked time slot',
       })
     })

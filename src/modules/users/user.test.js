@@ -80,16 +80,19 @@ describe('User module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Profile retrieved successfully',
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          created_at: expect.any(String),
+        data: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            created_at: expect.any(String),
+          },
         },
       })
-      expect(response.body.user.password_hash).toBeUndefined()
+      expect(response.body.data.user.password_hash).toBeUndefined()
     })
 
     test('returns unauthorized without a token', async () => {
@@ -113,7 +116,10 @@ describe('User module', () => {
         .set('Authorization', `Bearer ${tokenFor(missingUser)}`)
 
       expect(response.status).toBe(404)
-      expect(response.body).toEqual({ message: 'User not found' })
+      expect(response.body).toEqual({
+        success: false,
+        message: 'User not found',
+      })
     })
   })
 
@@ -131,15 +137,18 @@ describe('User module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Profile updated successfully',
-        user: expect.objectContaining({
-          id: user.id,
-          name: 'Jane Smith',
-          email: 'jane.smith@example.com',
-          role: user.role,
-          created_at: expect.any(String),
-          updated_at: expect.any(String),
-        }),
+        data: {
+          user: expect.objectContaining({
+            id: user.id,
+            name: 'Jane Smith',
+            email: 'jane.smith@example.com',
+            role: user.role,
+            created_at: expect.any(String),
+            updated_at: expect.any(String),
+          }),
+        },
       })
 
       const dbResult = await pool.query(
@@ -162,7 +171,7 @@ describe('User module', () => {
         .send({ name: 'Updated Name' })
 
       expect(response.status).toBe(200)
-      expect(response.body.user).toEqual(
+      expect(response.body.data.user).toEqual(
         expect.objectContaining({
           name: 'Updated Name',
           email: user.email,
@@ -180,6 +189,7 @@ describe('User module', () => {
 
       expect(emptyResponse.status).toBe(400)
       expect(emptyResponse.body).toEqual({
+        success: false,
         message: 'Validation failed',
         errors: [
           {
@@ -198,6 +208,7 @@ describe('User module', () => {
         })
 
       expect(invalidResponse.status).toBe(400)
+      expect(invalidResponse.body.success).toBe(false)
       expect(invalidResponse.body.errors).toEqual(
         expect.arrayContaining([
           {
@@ -225,6 +236,7 @@ describe('User module', () => {
 
       expect(response.status).toBe(409)
       expect(response.body).toEqual({
+        success: false,
         message: 'Email already in use by another account',
       })
     })
@@ -245,6 +257,7 @@ describe('User module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Password updated successfully',
       })
 
@@ -271,6 +284,7 @@ describe('User module', () => {
         })
 
       expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
       expect(response.body.message).toBe('Validation failed')
       expect(response.body.errors).toEqual(
         expect.arrayContaining([
@@ -304,6 +318,7 @@ describe('User module', () => {
 
       expect(response.status).toBe(401)
       expect(response.body).toEqual({
+        success: false,
         message: 'Current password is incorrect',
       })
     })
@@ -319,6 +334,7 @@ describe('User module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Account deleted successfully',
       })
 
@@ -341,7 +357,10 @@ describe('User module', () => {
         .set('Authorization', `Bearer ${tokenFor(missingUser)}`)
 
       expect(response.status).toBe(404)
-      expect(response.body).toEqual({ message: 'User not found' })
+      expect(response.body).toEqual({
+        success: false,
+        message: 'User not found',
+      })
     })
   })
 

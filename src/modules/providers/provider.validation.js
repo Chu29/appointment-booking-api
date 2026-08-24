@@ -30,6 +30,7 @@ export const validateUpdateProvider = (req, res, next) => {
     logger.warn('Provider update validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })

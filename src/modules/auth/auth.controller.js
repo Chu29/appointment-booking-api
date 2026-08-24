@@ -1,4 +1,4 @@
-import { createUser } from './auth.services.js'
+import { createUser, authenticateUser } from './auth.services.js'
 import logger from '../../utils/logger.js'
 import jwt from 'jsonwebtoken'
 
@@ -19,13 +19,19 @@ export const registrationHandler = async (req, res, next) => {
     })
 
     res.status(201).json({
+      success: true,
       message: 'User registered successfully',
-      user: newUser,
+      data: {
+        user: newUser,
+      },
     })
   } catch (error) {
     // Handle known errors with status codes
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
 
     // Pass unexpected errors to error handler
@@ -43,7 +49,6 @@ export const loginHandler = async (req, res, next) => {
     const { email, password } = req.body
 
     // Authenticate user via service layer
-    const { authenticateUser } = await import('./auth.services.js')
     const user = await authenticateUser(email, password)
 
     // Generate JWT token
@@ -58,19 +63,25 @@ export const loginHandler = async (req, res, next) => {
     logger.info(`User logged in successfully: ${user.email}`)
 
     res.status(200).json({
+      success: true,
       message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       },
     })
   } catch (error) {
     // Handle known errors with status codes
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
 
     // Pass unexpected errors to error handler

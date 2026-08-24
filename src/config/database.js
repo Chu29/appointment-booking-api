@@ -184,12 +184,12 @@ const query = async (text, params) => {
     const response = await pool.query(text, params)
     const duration = Date.now() - start
     logger.info(
-      `Executed query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, duration: ${duration}ms, rows: ${response.rowCount}}`,
+      `Executed query: { text: ${text.substring(0, 100).trim()}..., paramCount: ${params ? params.length : 0}, duration: ${duration}ms, rows: ${response.rowCount}}`,
     )
     return response
   } catch (error) {
     logger.error(
-      `Error executing query: { text: ${text.substring(0, 100)}..., params: ${JSON.stringify(params)}, error: ${error.message}}`,
+      `Error executing query: { text: ${text.substring(0, 100).trim()}..., paramCount: ${params ? params.length : 0}, error: ${error.message}}`,
     )
     throw error
   }

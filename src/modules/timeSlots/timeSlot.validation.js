@@ -30,6 +30,17 @@ const createTimeSlotSchema = Joi.object({
     'number.max': 'Duration must not exceed 480 minutes (8 hours)',
     'any.required': 'Duration is required',
   }),
+}).custom((value, helpers) => {
+  if (
+    value.start_time &&
+    value.end_time &&
+    value.end_time <= value.start_time
+  ) {
+    return helpers.message({
+      custom: 'End time must be chronologically after start time',
+    })
+  }
+  return value
 })
 
 export const validateCreateTimeSlot = (req, res, next) => {
@@ -39,13 +50,14 @@ export const validateCreateTimeSlot = (req, res, next) => {
 
   if (error) {
     const errors = error.details.map((err) => ({
-      field: err.path[0],
+      field: err.path[0] || 'end_time',
       message: err.message,
     }))
 
     logger.warn('Time slot creation validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })
@@ -81,6 +93,18 @@ const updateTimeSlotSchema = Joi.object({
   }),
 })
   .min(1)
+  .custom((value, helpers) => {
+    if (
+      value.start_time &&
+      value.end_time &&
+      value.end_time <= value.start_time
+    ) {
+      return helpers.message({
+        custom: 'End time must be chronologically after start time',
+      })
+    }
+    return value
+  })
   .messages({
     'object.min': 'At least one field must be provided to update',
   })
@@ -92,13 +116,14 @@ export const validateUpdateTimeSlot = (req, res, next) => {
 
   if (error) {
     const errors = error.details.map((err) => ({
-      field: err.path[0],
+      field: err.path[0] || 'end_time',
       message: err.message,
     }))
 
     logger.warn('Time slot update validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })

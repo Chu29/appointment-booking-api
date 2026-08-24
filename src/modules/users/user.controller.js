@@ -16,12 +16,18 @@ export const getProfile = async (req, res, next) => {
     const user = await getUserById(userId)
 
     res.status(200).json({
+      success: true,
       message: 'Profile retrieved successfully',
-      user,
+      data: {
+        user,
+      },
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Get profile error', error)
     next(error)
@@ -40,12 +46,18 @@ export const updateProfile = async (req, res, next) => {
     const updatedUser = await updateUserProfile(userId, { name, email })
 
     res.status(200).json({
+      success: true,
       message: 'Profile updated successfully',
-      user: updatedUser,
+      data: {
+        user: updatedUser,
+      },
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Update profile error', error)
     next(error)
@@ -64,11 +76,15 @@ export const changePassword = async (req, res, next) => {
     await updateUserPassword(userId, oldPassword, newPassword)
 
     res.status(200).json({
+      success: true,
       message: 'Password updated successfully',
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Change password error', error)
     next(error)
@@ -86,11 +102,15 @@ export const deleteAccount = async (req, res, next) => {
     await deleteUser(userId)
 
     res.status(200).json({
+      success: true,
       message: 'Account deleted successfully',
     })
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message })
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
     }
     logger.error('Delete account error', error)
     next(error)

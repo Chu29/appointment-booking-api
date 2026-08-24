@@ -41,21 +41,24 @@ afterAll(async () => {
 
 describe('Auth module', () => {
   describe('POST /auth/register', () => {
-    test('registers a user successfully', async () => {
+    test('registers a client user successfully', async () => {
       const response = await request(app)
         .post('/auth/register')
         .send(validRegistrationPayload)
 
       expect(response.status).toBe(201)
       expect(response.body).toEqual({
+        success: true,
         message: 'User registered successfully',
-        user: expect.objectContaining({
-          id: expect.any(Number),
-          name: validRegistrationPayload.name,
-          email: validRegistrationPayload.email,
-          role: validRegistrationPayload.role,
-          created_at: expect.any(String),
-        }),
+        data: {
+          user: expect.objectContaining({
+            id: expect.any(Number),
+            name: validRegistrationPayload.name,
+            email: validRegistrationPayload.email,
+            role: validRegistrationPayload.role,
+            created_at: expect.any(String),
+          }),
+        },
       })
 
       const dbResult = await pool.query(
@@ -71,6 +74,30 @@ describe('Auth module', () => {
       )
     })
 
+    test('registers a provider user and auto-creates provider profile', async () => {
+      const providerPayload = {
+        name: 'Dr. Smith',
+        email: 'smith@example.com',
+        password: 'Password1',
+        role: 'provider',
+      }
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send(providerPayload)
+
+      expect(response.status).toBe(201)
+      expect(response.body.success).toBe(true)
+
+      const providerResult = await pool.query(
+        'SELECT * FROM service_providers WHERE user_id = $1',
+        [response.body.data.user.id],
+      )
+
+      expect(providerResult.rows).toHaveLength(1)
+      expect(providerResult.rows[0].user_id).toBe(response.body.data.user.id)
+    })
+
     test('returns validation errors for invalid registration data', async () => {
       const response = await request(app).post('/auth/register').send({
         name: 'A',
@@ -80,6 +107,7 @@ describe('Auth module', () => {
       })
 
       expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
       expect(response.body.message).toBe('Validation failed')
       expect(response.body.errors).toEqual(
         expect.arrayContaining([
@@ -112,6 +140,7 @@ describe('Auth module', () => {
 
       expect(response.status).toBe(409)
       expect(response.body).toEqual({
+        success: false,
         message: `User with email ${validRegistrationPayload.email} already exists`,
       })
     })
@@ -128,18 +157,21 @@ describe('Auth module', () => {
 
       expect(response.status).toBe(200)
       expect(response.body).toEqual({
+        success: true,
         message: 'Login successful',
-        token: expect.any(String),
-        user: {
-          id: expect.any(Number),
-          name: validRegistrationPayload.name,
-          email: validRegistrationPayload.email,
-          role: validRegistrationPayload.role,
+        data: {
+          token: expect.any(String),
+          user: {
+            id: expect.any(Number),
+            name: validRegistrationPayload.name,
+            email: validRegistrationPayload.email,
+            role: validRegistrationPayload.role,
+          },
         },
       })
 
       const decodedToken = jwt.verify(
-        response.body.token,
+        response.body.data.token,
         process.env.JWT_SECRET,
       )
 
@@ -158,6 +190,7 @@ describe('Auth module', () => {
       })
 
       expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
       expect(response.body.message).toBe('Validation failed')
       expect(response.body.errors).toEqual(
         expect.arrayContaining([
@@ -183,6 +216,7 @@ describe('Auth module', () => {
 
       expect(response.status).toBe(401)
       expect(response.body).toEqual({
+        success: false,
         message: 'Invalid email or password',
       })
     })

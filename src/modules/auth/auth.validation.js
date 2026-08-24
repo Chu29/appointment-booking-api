@@ -48,6 +48,7 @@ export const validateRegistration = (req, res, next) => {
     logger.warn('Validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })
@@ -83,6 +84,7 @@ export const validateLogin = (req, res, next) => {
     logger.warn('Login validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })

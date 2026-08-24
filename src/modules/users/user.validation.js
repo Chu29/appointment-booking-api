@@ -30,6 +30,7 @@ export const validateUpdateProfile = (req, res, next) => {
     logger.warn('Profile update validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })
@@ -79,6 +80,7 @@ export const validateChangePassword = (req, res, next) => {
     logger.warn('Password change validation failed', { errors })
 
     return res.status(400).json({
+      success: false,
       message: 'Validation failed',
       errors,
     })
