@@ -107,8 +107,8 @@ export const notifyAppointmentCancelled = (appointment, cancelledBy) => {
         message,
         appointment: {
           id: appointment.id,
-          date: appointment.slot.slot_date,
-          time: appointment.slot.start_time,
+          date: appointment.slot?.slot_date || appointment.slot_date,
+          time: appointment.slot?.start_time || appointment.start_time,
           cancelledBy,
           [isClient ? 'provider' : 'client']: isClient
             ? {

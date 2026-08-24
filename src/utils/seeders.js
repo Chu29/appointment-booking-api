@@ -1,4 +1,4 @@
-import { pool } from '../config/database.js'
+import { pool, initDbSchema } from '../config/database.js'
 import logger from '../utils/logger.js'
 import bcrypt from 'bcryptjs'
 
@@ -203,6 +203,7 @@ export const seedTimeSlots = async () => {
  */
 export const runSeeds = async () => {
   try {
+    await initDbSchema()
     await seedProviders()
     await seedTimeSlots()
     logger.info('All seeds completed successfully')

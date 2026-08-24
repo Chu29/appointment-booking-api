@@ -11,7 +11,7 @@
     "start": "nodemon ./bin/www",
     "dev": "nodemon ./bin/www",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "seed": "node -e \"import('./src/utils/seeders.js').then(m => m.runSeeds())\""
+    "seed": "node ./scripts/seed.js"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",

@@ -151,6 +151,12 @@ export const updateProviderProfile = async (
 
     const result = await pool.query(query, values)
 
+    if (result.rows.length === 0) {
+      const error = new Error('Provider profile not found')
+      error.status = 404
+      throw error
+    }
+
     logger.info(`Provider profile updated: user_id=${userId}`)
     return result.rows[0]
   } catch (error) {
