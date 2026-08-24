@@ -28,7 +28,7 @@ services:
   # Node.js API Service
   api:
     build:
-      context: .
+      context: ./apps/api
       dockerfile: Dockerfile
     container_name: appointment-booking-api
     restart: unless-stopped
@@ -48,7 +48,7 @@ services:
       SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-*}
       HASH_SALT: ${HASH_SALT:-10}
     volumes:
-      - .:/app
+      - ./apps/api:/app
       - /app/node_modules
     depends_on:
       postgres:
