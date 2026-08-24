@@ -443,6 +443,36 @@ describe('Time slot module', () => {
         message: 'Cannot update a booked time slot',
       })
     })
+
+    test('returns conflict when updating to an existing slot time', async () => {
+      const { user, provider } = await createProvider()
+      await createSlot({
+        providerId: provider.id,
+        slotDate: '2026-06-15',
+        startTime: '09:00',
+        endTime: '10:00',
+      })
+      const slot2 = await createSlot({
+        providerId: provider.id,
+        slotDate: '2026-06-15',
+        startTime: '10:00',
+        endTime: '11:00',
+      })
+
+      const conflictResponse = await request(app)
+        .put(`/time-slots/${slot2.id}`)
+        .set('Authorization', `Bearer ${tokenFor(user)}`)
+        .send({
+          start_time: '09:00',
+          end_time: '10:00',
+        })
+
+      expect(conflictResponse.status).toBe(409)
+      expect(conflictResponse.body).toEqual({
+        success: false,
+        message: 'Time slot already exists for this date and time',
+      })
+    })
   })
 
   describe('DELETE /time-slots/:slotId', () => {

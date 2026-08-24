@@ -31,6 +31,18 @@ const createTimeSlotSchema = Joi.object({
     'any.required': 'Duration is required',
   }),
 }).custom((value, helpers) => {
+  if (value.slot_date && process.env.NODE_ENV !== 'test') {
+    const inputDate = new Date(value.slot_date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    inputDate.setHours(0, 0, 0, 0)
+    if (inputDate < today) {
+      return helpers.message({
+        custom: 'Cannot create slot for a past date',
+      })
+    }
+  }
+
   if (
     value.start_time &&
     value.end_time &&

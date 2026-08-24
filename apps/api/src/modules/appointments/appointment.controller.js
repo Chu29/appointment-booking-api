@@ -1,17 +1,17 @@
 import * as appointmentService from './appointment.service.js'
+import { getProviderByUserId } from '../providers/provider.service.js'
 import {
   notifyAppointmentBooked,
   notifyAppointmentCancelled,
   notifyAppointmentCompleted,
 } from '../../services/notification.service.js'
 import logger from '../../utils/logger.js'
-import { pool } from '../../config/database.js'
 
 /**
  * Book an appointment
  * POST /appointments
  */
-export const bookAppointmentHandler = async (req, res) => {
+export const bookAppointmentHandler = async (req, res, next) => {
   try {
     const clientId = req.user.id
     const { time_slot_id } = req.body
@@ -70,24 +70,14 @@ export const bookAppointmentHandler = async (req, res) => {
       },
     })
   } catch (error) {
-    logger.error('Error in bookAppointmentHandler:', error)
-
-    if (
-      error.message.includes('not found') ||
-      error.message.includes('already booked') ||
-      error.message.includes('already exists')
-    ) {
-      return res.status(400).json({
+    if (error.status) {
+      return res.status(error.status).json({
         success: false,
         message: error.message,
       })
     }
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to book appointment',
-      error: error.message,
-    })
+    logger.error('Error in bookAppointmentHandler:', error)
+    next(error)
   }
 }
 
@@ -95,7 +85,7 @@ export const bookAppointmentHandler = async (req, res) => {
  * Get appointments for the authenticated user
  * GET /appointments/my-appointments
  */
-export const getMyAppointmentsHandler = async (req, res) => {
+export const getMyAppointmentsHandler = async (req, res, next) => {
   try {
     const userId = req.user.id
     const userRole = req.user.role
@@ -109,22 +99,9 @@ export const getMyAppointmentsHandler = async (req, res) => {
         status,
       )
     } else if (userRole === 'provider') {
-      // Get provider_id from service_providers table
-      const providerResult = await pool.query(
-        'SELECT id FROM service_providers WHERE user_id = $1',
-        [userId],
-      )
-
-      if (providerResult.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Provider profile not found',
-        })
-      }
-
-      const providerId = providerResult.rows[0].id
+      const provider = await getProviderByUserId(userId)
       appointments = await appointmentService.getProviderAppointments(
-        providerId,
+        provider.id,
         status,
       )
     } else {
@@ -140,12 +117,14 @@ export const getMyAppointmentsHandler = async (req, res) => {
       data: appointments,
     })
   } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
+    }
     logger.error('Error in getMyAppointmentsHandler:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch appointments',
-      error: error.message,
-    })
+    next(error)
   }
 }
 
@@ -153,29 +132,16 @@ export const getMyAppointmentsHandler = async (req, res) => {
  * Get appointments for a specific provider (accessible by anyone)
  * GET /appointments/provider/:providerId
  */
-export const getProviderAppointmentsHandler = async (req, res) => {
+export const getProviderAppointmentsHandler = async (req, res, next) => {
   try {
     const userId = req.user.id
     const { providerId } = req.params
     const { status } = req.query
 
-    // Get the providerId for authenticated user
-    const providerResult = await pool.query(
-      'SELECT id FROM service_providers WHERE user_id = $1',
-      [userId],
-    )
-
-    if (providerResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Provider profile not found',
-      })
-    }
-
-    const authProviderUserId = providerResult.rows[0].id
+    const provider = await getProviderByUserId(userId)
 
     // Verify provider is requesting their own appointments
-    if (authProviderUserId !== parseInt(providerId)) {
+    if (provider.id !== parseInt(providerId, 10)) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view these appointments',
@@ -183,7 +149,7 @@ export const getProviderAppointmentsHandler = async (req, res) => {
     }
 
     const appointments = await appointmentService.getProviderAppointments(
-      parseInt(providerId),
+      parseInt(providerId, 10),
       status,
     )
 
@@ -193,12 +159,14 @@ export const getProviderAppointmentsHandler = async (req, res) => {
       data: appointments,
     })
   } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
+    }
     logger.error('Error in getProviderAppointmentsHandler:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch provider appointments',
-      error: error.message,
-    })
+    next(error)
   }
 }
 
@@ -206,9 +174,9 @@ export const getProviderAppointmentsHandler = async (req, res) => {
  * Cancel an appointment
  * PUT /appointments/:id/cancel
  */
-export const cancelAppointmentHandler = async (req, res) => {
+export const cancelAppointmentHandler = async (req, res, next) => {
   try {
-    const appointmentId = parseInt(req.params.id)
+    const appointmentId = parseInt(req.params.id, 10)
     const userId = req.user.id
     const userRole = req.user.role
 
@@ -250,25 +218,14 @@ export const cancelAppointmentHandler = async (req, res) => {
       },
     })
   } catch (error) {
-    logger.error('Error in cancelAppointmentHandler:', error)
-
-    if (
-      error.message.includes('not found') ||
-      error.message.includes('Not authorized') ||
-      error.message.includes('already cancelled') ||
-      error.message.includes('Cannot cancel')
-    ) {
-      return res.status(400).json({
+    if (error.status) {
+      return res.status(error.status).json({
         success: false,
         message: error.message,
       })
     }
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to cancel appointment',
-      error: error.message,
-    })
+    logger.error('Error in cancelAppointmentHandler:', error)
+    next(error)
   }
 }
 
@@ -276,9 +233,9 @@ export const cancelAppointmentHandler = async (req, res) => {
  * Mark appointment as completed (provider only)
  * PUT /appointments/:id/complete
  */
-export const completeAppointmentHandler = async (req, res) => {
+export const completeAppointmentHandler = async (req, res, next) => {
   try {
-    const appointmentId = parseInt(req.params.id)
+    const appointmentId = parseInt(req.params.id, 10)
     const providerUserId = req.user.id
 
     // Verify user is a provider
@@ -316,25 +273,14 @@ export const completeAppointmentHandler = async (req, res) => {
       },
     })
   } catch (error) {
-    logger.error('Error in completeAppointmentHandler:', error)
-
-    if (
-      error.message.includes('not found') ||
-      error.message.includes('Not authorized') ||
-      error.message.includes('already') ||
-      error.message.includes('Cannot complete')
-    ) {
-      return res.status(400).json({
+    if (error.status) {
+      return res.status(error.status).json({
         success: false,
         message: error.message,
       })
     }
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to complete appointment',
-      error: error.message,
-    })
+    logger.error('Error in completeAppointmentHandler:', error)
+    next(error)
   }
 }
 
@@ -342,9 +288,9 @@ export const completeAppointmentHandler = async (req, res) => {
  * Get appointment by ID
  * GET /appointments/:id
  */
-export const getAppointmentByIdHandler = async (req, res) => {
+export const getAppointmentByIdHandler = async (req, res, next) => {
   try {
-    const appointmentId = parseInt(req.params.id)
+    const appointmentId = parseInt(req.params.id, 10)
     const userId = req.user.id
     const userRole = req.user.role
 
@@ -375,11 +321,13 @@ export const getAppointmentByIdHandler = async (req, res) => {
       data: appointment,
     })
   } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+      })
+    }
     logger.error('Error in getAppointmentByIdHandler:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch appointment',
-      error: error.message,
-    })
+    next(error)
   }
 }

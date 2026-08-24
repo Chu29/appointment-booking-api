@@ -13,23 +13,28 @@ export const bookAppointment = async (clientId, timeSlotId) => {
   try {
     await client.query('BEGIN')
 
-    // Check if time slot exists and is available
+    // Check if time slot exists and lock the row for update to prevent concurrent double-booking
     const slotResult = await client.query(
       `SELECT ts.*, sp.user_id as provider_user_id
        FROM time_slots ts
        JOIN service_providers sp ON ts.provider_id = sp.id
-       WHERE ts.id = $1`,
+       WHERE ts.id = $1
+       FOR UPDATE`,
       [timeSlotId],
     )
 
     if (slotResult.rows.length === 0) {
-      throw new Error('Time slot not found')
+      const error = new Error('Time slot not found')
+      error.status = 404
+      throw error
     }
 
     const slot = slotResult.rows[0]
 
     if (slot.is_booked) {
-      throw new Error('Time slot is already booked')
+      const error = new Error('Time slot is already booked')
+      error.status = 400
+      throw error
     }
 
     // Check if appointment already exists for this slot
@@ -39,7 +44,9 @@ export const bookAppointment = async (clientId, timeSlotId) => {
     )
 
     if (existingAppointment.rows.length > 0) {
-      throw new Error('Appointment already exists for this time slot')
+      const error = new Error('Appointment already exists for this time slot')
+      error.status = 400
+      throw error
     }
 
     // Create appointment
@@ -64,6 +71,11 @@ export const bookAppointment = async (clientId, timeSlotId) => {
     return appointment
   } catch (error) {
     await client.query('ROLLBACK')
+    if (error.code === '23505') {
+      const err = new Error('Time slot is already booked')
+      err.status = 409
+      throw err
+    }
     logger.error('Error booking appointment:', error)
     throw error
   } finally {
@@ -209,7 +221,9 @@ export const cancelAppointment = async (appointmentId, userId, userRole) => {
     )
 
     if (appointmentResult.rows.length === 0) {
-      throw new Error('Appointment not found')
+      const error = new Error('Appointment not found')
+      error.status = 404
+      throw error
     }
 
     const appointment = appointmentResult.rows[0]
@@ -220,17 +234,23 @@ export const cancelAppointment = async (appointmentId, userId, userRole) => {
       userRole === 'provider' && appointment.provider_user_id === userId
 
     if (!isClient && !isProvider) {
-      throw new Error('Not authorized to cancel this appointment')
+      const error = new Error('Not authorized to cancel this appointment')
+      error.status = 403
+      throw error
     }
 
     // Check if already cancelled
     if (appointment.status === 'cancelled') {
-      throw new Error('Appointment is already cancelled')
+      const error = new Error('Appointment is already cancelled')
+      error.status = 400
+      throw error
     }
 
     // Check if already completed
     if (appointment.status === 'completed') {
-      throw new Error('Cannot cancel a completed appointment')
+      const error = new Error('Cannot cancel a completed appointment')
+      error.status = 400
+      throw error
     }
 
     // Update appointment status
@@ -287,23 +307,31 @@ export const completeAppointment = async (appointmentId, providerUserId) => {
     )
 
     if (appointmentResult.rows.length === 0) {
-      throw new Error('Appointment not found')
+      const error = new Error('Appointment not found')
+      error.status = 404
+      throw error
     }
 
     const appointment = appointmentResult.rows[0]
 
     // Verify provider authorization
     if (appointment.provider_user_id !== providerUserId) {
-      throw new Error('Not authorized to complete this appointment')
+      const error = new Error('Not authorized to complete this appointment')
+      error.status = 403
+      throw error
     }
 
     // Check if already completed or cancelled
     if (appointment.status === 'completed') {
-      throw new Error('Appointment is already marked as completed')
+      const error = new Error('Appointment is already marked as completed')
+      error.status = 400
+      throw error
     }
 
     if (appointment.status === 'cancelled') {
-      throw new Error('Cannot complete a cancelled appointment')
+      const error = new Error('Cannot complete a cancelled appointment')
+      error.status = 400
+      throw error
     }
 
     // Update appointment status

@@ -203,26 +203,33 @@ router.put('/profile', validateUpdateProfile, updateProfile)
  *           schema:
  *             type: object
  *             required:
- *               - old_password
- *               - new_password
+ *               - oldPassword
+ *               - newPassword
+ *               - confirmPassword
  *             properties:
- *               old_password:
+ *               oldPassword:
  *                 type: string
  *                 format: password
  *                 description: Current password for verification
- *                 example: oldPassword123
- *               new_password:
+ *                 example: OldPassword1
+ *               newPassword:
  *                 type: string
  *                 format: password
- *                 description: New password (minimum 6 characters)
- *                 minLength: 6
- *                 example: newSecurePassword456
+ *                 description: New password (minimum 8 characters with upper, lower, and digit)
+ *                 minLength: 8
+ *                 example: NewSecurePassword456
+ *               confirmPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: Must match new password
+ *                 example: NewSecurePassword456
  *           examples:
  *             changePassword:
  *               summary: Change password example
  *               value:
- *                 old_password: currentPassword123
- *                 new_password: newSecurePassword456
+ *                 oldPassword: CurrentPassword1
+ *                 newPassword: NewSecurePassword456
+ *                 confirmPassword: NewSecurePassword456
  *     responses:
  *       200:
  *         description: Password changed successfully

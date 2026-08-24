@@ -229,6 +229,12 @@ export const updateTimeSlot = async (
     logger.info(`Time slot updated: id=${slotId}`)
     return result.rows[0]
   } catch (error) {
+    if (error.code === '23505') {
+      logger.warn(`Duplicate time slot on update: id=${slotId}`)
+      const err = new Error('Time slot already exists for this date and time')
+      err.status = 409
+      throw err
+    }
     logger.error('Error updating time slot', { slotId, error: error.message })
     throw error
   }

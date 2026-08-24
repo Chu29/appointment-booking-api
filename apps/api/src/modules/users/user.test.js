@@ -95,10 +95,11 @@ describe('User module', () => {
       expect(response.body.data.user.password_hash).toBeUndefined()
     })
 
-    test('returns unauthorized without a token', async () => {
+    test('returns unauthorized without a token and includes security headers', async () => {
       const response = await request(app).get('/users/profile')
 
       expect(response.status).toBe(401)
+      expect(response.headers['x-content-type-options']).toBe('nosniff')
       expect(response.body).toEqual({
         message: 'Access denied. No token provided.',
       })

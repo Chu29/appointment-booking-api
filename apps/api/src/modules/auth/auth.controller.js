@@ -1,4 +1,4 @@
-import { createUser, authenticateUser } from './auth.services.js'
+import { createUser, authenticateUser } from './auth.service.js'
 import logger from '../../utils/logger.js'
 import jwt from 'jsonwebtoken'
 

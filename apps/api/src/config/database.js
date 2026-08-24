@@ -2,13 +2,13 @@ import { Pool } from 'pg'
 import logger from '../utils/logger.js'
 import dotenv from 'dotenv'
 
-// Load env (use .env.test when running tests)
+// Load base env, then override with .env.test when running tests
+dotenv.config()
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: '.env.test', override: true })
-  logger.info('Loaded .env.test file for testing environment')
+  logger.info('Loaded environment for testing')
 } else {
-  dotenv.config()
-  logger.info('Loaded .env file for non-testing environment')
+  logger.info('Loaded environment for non-testing')
 }
 
 // Support either a DATABASE_URL connection string or individual DB_* vars
@@ -153,6 +153,7 @@ const initDbSchema = async () => {
       CREATE INDEX IF NOT EXISTS idx_time_slots_provider ON time_slots(provider_id);
       CREATE INDEX IF NOT EXISTS idx_time_slots_date ON time_slots(slot_date);
       CREATE INDEX IF NOT EXISTS idx_time_slots_booked ON time_slots(is_booked);
+      CREATE INDEX IF NOT EXISTS idx_time_slots_available ON time_slots(provider_id, slot_date, start_time) WHERE is_booked = false;
       CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments(client_id);
       CREATE INDEX IF NOT EXISTS idx_appointments_provider ON appointments(provider_id);
       CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);

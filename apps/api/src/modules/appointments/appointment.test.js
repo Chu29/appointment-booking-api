@@ -181,6 +181,42 @@ describe('Appointments module', () => {
       expect(response.body.success).toBe(false)
       expect(response.body.message).toContain('already booked')
     })
+
+    test('handles concurrent booking requests gracefully without double-booking', async () => {
+      const client1 = await createUser({
+        name: 'Client 1',
+        email: 'c1@example.com',
+        role: 'client',
+      })
+      const client2 = await createUser({
+        name: 'Client 2',
+        email: 'c2@example.com',
+        role: 'client',
+      })
+      const { provider } = await createProvider()
+      const slot = await createSlot({ providerId: provider.id })
+
+      const [res1, res2] = await Promise.all([
+        request(app)
+          .post('/appointments')
+          .set('Authorization', `Bearer ${tokenFor(client1)}`)
+          .send({ time_slot_id: slot.id }),
+        request(app)
+          .post('/appointments')
+          .set('Authorization', `Bearer ${tokenFor(client2)}`)
+          .send({ time_slot_id: slot.id }),
+      ])
+
+      const statuses = [res1.status, res2.status].sort()
+      expect(statuses[0]).toBe(201)
+      expect([400, 409]).toContain(statuses[1])
+
+      const appointmentsCount = await pool.query(
+        'SELECT count(*)::int as count FROM appointments WHERE time_slot_id = $1',
+        [slot.id],
+      )
+      expect(appointmentsCount.rows[0].count).toBe(1)
+    })
   })
 
   describe('GET /appointments/my-appointments', () => {

@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-import app from '../api/index.js'
+import app from '../src/app.js'
 import debugLib from 'debug'
 const debug = debugLib('appointment-booking-api:server')
 import { createServer } from 'http'

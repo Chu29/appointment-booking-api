@@ -5,14 +5,17 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy package definition files
-COPY package.json pnpm-lock.yaml ./
+# Copy workspace definitions
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
 
 # Install dependencies
 RUN pnpm install
 
 # Copy application source code
-COPY . .
+COPY apps/api ./apps/api
+
+WORKDIR /app/apps/api
 
 # Expose server port
 EXPOSE 3000

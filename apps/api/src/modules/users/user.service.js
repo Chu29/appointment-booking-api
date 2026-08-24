@@ -2,7 +2,7 @@ import { pool } from '../../config/database.js'
 import logger from '../../utils/logger.js'
 import bcrypt from 'bcryptjs'
 
-const HASH_SALT = 10
+const HASH_SALT = parseInt(process.env.HASH_SALT, 10) || 10
 
 /**
  * Get user by ID
