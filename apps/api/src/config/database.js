@@ -1,6 +1,9 @@
-import { Pool } from 'pg'
+import { Pool, types } from 'pg'
 import logger from '../utils/logger.js'
 import dotenv from 'dotenv'
+
+// Force pg to return DATE columns (OID 1082) as clean 'YYYY-MM-DD' strings
+types.setTypeParser(1082, (val) => val)
 
 // Load base env, then override with .env.test when running tests
 dotenv.config()
