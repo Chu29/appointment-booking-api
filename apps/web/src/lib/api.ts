@@ -66,6 +66,12 @@ export const api = {
       const res = await apiClient.post<RegisterResponse>('/auth/register', data)
       return res.data
     },
+    logout: async (): Promise<{ success: boolean; message: string }> => {
+      const res = await apiClient.post<{ success: boolean; message: string }>(
+        '/auth/logout',
+      )
+      return res.data
+    },
   },
   users: {
     getProfile: async (): Promise<ProfileResponse> => {
