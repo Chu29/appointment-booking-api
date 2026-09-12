@@ -62,6 +62,15 @@ export const loginHandler = async (req, res, next) => {
 
     logger.info(`User logged in successfully: ${user.email}`)
 
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    }
+
+    res.cookie('token', token, cookieOptions)
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -88,4 +97,21 @@ export const loginHandler = async (req, res, next) => {
     logger.error('Login handler error', error)
     next(error)
   }
+}
+
+/**
+ * Handle user logout request by clearing session cookie
+ * @route POST /auth/logout
+ */
+export const logoutHandler = async (_req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
+
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  })
 }
