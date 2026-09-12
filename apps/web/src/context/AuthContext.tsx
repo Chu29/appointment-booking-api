@@ -4,7 +4,6 @@ import { api } from '../lib/api'
 
 interface AuthContextType {
   user: User | null
-  token: string | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
@@ -14,7 +13,7 @@ interface AuthContextType {
     password: string,
     role: 'client' | 'provider',
   ) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   updateUser: (updatedUser: Partial<User>) => void
   refreshProfile: () => Promise<void>
 }
@@ -28,28 +27,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const savedUser = localStorage.getItem('user')
     return savedUser ? JSON.parse(savedUser) : null
   })
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem('token'),
-  )
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   useEffect(() => {
+    // Clear any obsolete token from previous versions
+    localStorage.removeItem('token')
+
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('token')
-      if (storedToken) {
-        try {
-          const profile = await api.users.getProfile()
-          setUser(profile.data.user)
-          localStorage.setItem('user', JSON.stringify(profile.data.user))
-        } catch {
-          // Token invalid or expired
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          setToken(null)
-          setUser(null)
-        }
+      try {
+        const profile = await api.users.getProfile()
+        setUser(profile.data.user)
+        localStorage.setItem('user', JSON.stringify(profile.data.user))
+      } catch {
+        // Not logged in or session expired
+        localStorage.removeItem('user')
+        setUser(null)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     initAuth()
@@ -57,10 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string) => {
     const response = await api.auth.login({ email, password })
-    const { token: jwtToken, user: authUser } = response.data
-    localStorage.setItem('token', jwtToken)
+    const authUser = response.data.user
     localStorage.setItem('user', JSON.stringify(authUser))
-    setToken(jwtToken)
     setUser(authUser)
   }
 
@@ -74,11 +67,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await login(email, password)
   }
 
-  const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setToken(null)
-    setUser(null)
+  const logout = async () => {
+    try {
+      await api.auth.logout()
+    } catch (err) {
+      console.warn('Logout error', err)
+    } finally {
+      localStorage.removeItem('user')
+      setUser(null)
+    }
   }
 
   const updateUser = (updatedFields: Partial<User>) => {
@@ -103,8 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
-        token,
-        isAuthenticated: !!token && !!user,
+        isAuthenticated: !!user,
         isLoading,
         login,
         register,
