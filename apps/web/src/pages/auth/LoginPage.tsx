@@ -45,12 +45,6 @@ export const LoginPage: React.FC = () => {
     }
   }
 
-  // Demo helpers
-  const fillDemo = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail)
-    setPassword(demoPass)
-  }
-
   return (
     <div className="min-h-[80vh] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
@@ -110,32 +104,6 @@ export const LoginPage: React.FC = () => {
                 Sign In
               </Button>
             </form>
-
-            <div className="mt-6 border-t border-gray-100 pt-4">
-              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider mb-2 text-center">
-                Quick Demo Credentials
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => fillDemo('jane@example.com', 'Password1')}
-                >
-                  Demo Client
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => fillDemo('doc@example.com', 'Password1')}
-                >
-                  Demo Provider
-                </Button>
-              </div>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t border-gray-50 py-4 bg-gray-50/50 rounded-b-xl">
             <p className="text-sm text-gray-600">
