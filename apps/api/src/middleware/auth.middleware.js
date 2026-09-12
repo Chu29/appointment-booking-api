@@ -7,9 +7,11 @@ import logger from '../utils/logger.js'
  */
 export const authenticateToken = (req, res, next) => {
   try {
-    // Get token from Authorization header (format: "Bearer <token>")
+    // Get token from cookie OR Authorization header (format: "Bearer <token>")
     const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
+    const headerToken = authHeader && authHeader.split(' ')[1]
+    const cookieToken = req.cookies?.token
+    const token = cookieToken || headerToken
 
     if (!token) {
       logger.warn('Authentication failed: No token provided')
