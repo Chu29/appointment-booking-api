@@ -42,7 +42,7 @@ export const Navbar: React.FC = () => {
               <Calendar className="h-5 w-5" />
             </div>
             <span>
-              Book<span className="text-blue-600">Ease</span>
+              Book<span className="text-blue-600">Easy</span>
             </span>
           </Link>
 
